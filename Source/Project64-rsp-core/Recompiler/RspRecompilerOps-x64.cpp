@@ -261,31 +261,34 @@ void CRSPRecompilerOps::BNE(void)
             m_NextInstruction = RSPPIPELINE_DO_DELAY_SLOT;
             return;
         }
-        g_Notify->BreakPoint(__FILE__, __LINE__);
-#ifdef tofix
         if (m_OpCode.rs == 0 && m_OpCode.rt == 0)
         {
+            g_Notify->BreakPoint(__FILE__, __LINE__);
+#ifdef tofix
             MoveConstByteToVariable(0, &BranchCompare, "BranchCompare");
             m_NextInstruction = RSPPIPELINE_DO_DELAY_SLOT;
+#endif
             return;
         }
 
         if (m_OpCode.rt == 0)
         {
-            CompConstToVariable(0, &m_GPR[m_OpCode.rs].W, GPR_Name(m_OpCode.rs));
+            m_Assembler->CompConstToVariable(&m_GPR[m_OpCode.rs].W, GPR_Name(m_OpCode.rs), 0);
         }
         else if (m_OpCode.rs == 0)
         {
-            CompConstToVariable(0, &m_GPR[m_OpCode.rt].W, GPR_Name(m_OpCode.rt));
+            m_Assembler->CompConstToVariable(&m_GPR[m_OpCode.rt].W, GPR_Name(m_OpCode.rt), 0);
         }
         else
         {
+            g_Notify->BreakPoint(__FILE__, __LINE__);
+#ifdef tofix
             MoveVariableToX86reg(&m_GPR[m_OpCode.rt].W, GPR_Name(m_OpCode.rt), x86_EAX);
             CompX86regToVariable(x86_EAX, &m_GPR[m_OpCode.rs].W, GPR_Name(m_OpCode.rs));
-        }
-        SetnzVariable(&BranchCompare, "BranchCompare");
-        m_NextInstruction = RSPPIPELINE_DO_DELAY_SLOT;
 #endif
+        }
+        m_Assembler->SetnzVariable(&BranchCompare, "BranchCompare");
+        m_NextInstruction = RSPPIPELINE_DO_DELAY_SLOT;
     }
     else if (m_NextInstruction == RSPPIPELINE_DELAY_SLOT_DONE)
     {
@@ -315,20 +318,36 @@ void CRSPRecompilerOps::BNE(void)
 #endif
             }
             asmjit::Label Jump;
+            if (m_Recompiler.FindBranchJump(Target, Jump))
+            {
+                m_Assembler->JneLabel(stdstr_f("0x%X", Target).c_str(), Jump);
+            }
+            else
+            {
+                const RspCodeBlock * FunctionBlock = m_CurrentBlock ? m_CurrentBlock->GetFunctionBlock(Target) : nullptr;
+                if (FunctionBlock != nullptr)
+                {
+                    asmjit::Label ContinuJump = m_Assembler->newLabel();
+                    m_Assembler->JeLabel(stdstr_f("continue_0x%X", m_CompilePC).c_str(), ContinuJump);
+                    m_Assembler->add(asmjit::x86::rsp, FunctionStackSize);
+                    m_Assembler->JFunc(FunctionBlock->GetCompiledLocation(), stdstr_f("0x%X", Target).c_str());
+                    m_Assembler->bind(ContinuJump);
+                }
+                else
+                {
+                    g_Notify->BreakPoint(__FILE__, __LINE__);
+                }
+            }
+        }
+        else
+        {
+            asmjit::Label Jump;
             if (!m_Recompiler.FindBranchJump(Target, Jump))
             {
                 g_Notify->BreakPoint(__FILE__, __LINE__);
             }
-            m_Assembler->JneLabel(stdstr_f("0x%X", Target).c_str(), Jump);
-        }
-        else
-        {
-            g_Notify->BreakPoint(__FILE__, __LINE__);
-#ifdef tofix
-            // Take a look at the branch compare variable
-            CompConstToVariable(true, &BranchCompare, "BranchCompare");
-            JeLabel32("BranchNotEqual", 0);
-#endif
+            m_Assembler->CompConstToVariable(&BranchCompare, "BranchCompare", true);
+            m_Assembler->JeLabel(stdstr_f("0x%X", Target).c_str(), Jump);
         }
     }
     else if (m_NextInstruction == RSPPIPELINE_DELAY_SLOT_EXIT_DONE)
@@ -916,7 +935,7 @@ void CRSPRecompilerOps::Vector_VABS(void)
 
 void CRSPRecompilerOps::Vector_VADDC(void)
 {
-    g_Notify->BreakPoint(__FILE__, __LINE__);
+    Cheat_r4300iOpcode(&RSPOp::Vector_VADDC, "RSPOp::Vector_VADDC");
 }
 
 void CRSPRecompilerOps::Vector_VSUBC(void)
@@ -1176,7 +1195,7 @@ void CRSPRecompilerOps::UnknownOpcode(void)
 
 void CRSPRecompilerOps::EnterCodeBlock(void)
 {
-    m_Assembler->sub(asmjit::x86::rsp, 40);
+    m_Assembler->sub(asmjit::x86::rsp, FunctionStackSize);
     if (Profiling && m_CurrentBlock->CodeType() == RspCodeType_TASK)
     {
         m_Assembler->mov(asmjit::x86::rcx, asmjit::imm((uintptr_t)m_CompilePC));
@@ -1190,7 +1209,7 @@ void CRSPRecompilerOps::ExitCodeBlock(void)
     {
         m_Assembler->CallFunc(AddressOf(&StopTimer), "StopTimer");
     }
-    m_Assembler->add(asmjit::x86::rsp, 40);
+    m_Assembler->add(asmjit::x86::rsp, FunctionStackSize);
     m_Assembler->ret();
 }
 

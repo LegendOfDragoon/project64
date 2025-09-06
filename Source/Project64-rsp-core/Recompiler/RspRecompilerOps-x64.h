@@ -10,6 +10,11 @@ class RspCodeBlock;
 
 class CRSPRecompilerOps
 {
+    enum
+    {
+        FunctionStackSize = 40,
+    };
+
 public:
     CRSPRecompilerOps(CRSPSystem & System, CRSPRecompiler & Recompiler);
 

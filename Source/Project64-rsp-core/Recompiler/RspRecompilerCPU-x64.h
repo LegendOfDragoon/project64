@@ -35,9 +35,11 @@ private:
     CRSPRecompiler(const CRSPRecompiler &);
     CRSPRecompiler & operator=(const CRSPRecompiler &);
 
+    void ClearBranchJump();
     void AddBranchJump(uint32_t Target);
     bool FindBranchJump(uint32_t Target, asmjit::Label & Jump);
     void BuildRecompilerCPU(void);
+    bool CompileSubFunctions(RspCodeBlocks & Functions, const RspCodeBlock::Addresses & Addresses);
     void CompileCodeBlock(RspCodeBlock & block);
     void handleError(asmjit::Error err, const char * message, asmjit::BaseEmitter * origin);
     void SetupRspAssembler();

@@ -18,6 +18,7 @@ public:
     void CallThis(void * ThisPtr, void * FunctPtr, const char * FunctName);
     void CompConstToVariable(void * Variable, const char * VariableName, uint32_t Const);
     void CompX86regToVariable(void * Variable, const char * VariableName, const asmjit::x86::Gp & Reg);
+    void JFunc(void * FunctPtr, const char * FunctName);
     void JeLabel(const char * LabelName, asmjit::Label & JumpLabel);
     void JgLabel(const char * LabelName, asmjit::Label & JumpLabel);
     void JleLabel(const char * LabelName, asmjit::Label & JumpLabel);
@@ -27,6 +28,7 @@ public:
     void MoveVariableToX86reg(const asmjit::x86::Gp & Reg, void * Variable, const char * VariableName);
     void MoveX86regToVariable(void * Variable, const char * VariableName, const asmjit::x86::Gp & Reg);
     void SetgVariable(void * Variable, const char * VariableName);
+    void SetnzVariable(void * Variable, const char * VariableName);
     void SetzVariable(void * Variable, const char * VariableName);
 
     void AddLabelSymbol(const asmjit::Label & Label, const char * Symbol);

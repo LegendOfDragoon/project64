@@ -45,6 +45,11 @@ CRSPRecompiler::~CRSPRecompiler()
     }
 }
 
+void CRSPRecompiler::ClearBranchJump()
+{
+    m_BranchTargets.clear();
+}
+
 void CRSPRecompiler::AddBranchJump(uint32_t Target)
 {
     BranchTargets::iterator it = m_BranchTargets.find(Target);
@@ -437,6 +442,28 @@ void CRSPRecompiler::Reset()
     }
 }
 
+bool CRSPRecompiler::CompileSubFunctions(RspCodeBlocks & Functions, const RspCodeBlock::Addresses & Addresses)
+{
+    for (RspCodeBlock::Addresses::iterator itr = Addresses.begin(); itr != Addresses.end(); itr++)
+    {
+        RspCodeBlocks::iterator funcitr = Functions.find(*itr);
+        if (funcitr == Functions.end())
+        {
+            return false;
+        }
+        RspCodeBlockPtr & FuncCodeBlock = funcitr->second;
+        if (FuncCodeBlock->GetCompiledLocation() == nullptr)
+        {
+            if (!CompileSubFunctions(Functions, FuncCodeBlock->GetFunctionCalls()))
+            {
+                return nullptr;
+            }
+            CompileCodeBlock(*FuncCodeBlock);
+        }
+    }
+    return true;
+}
+
 void CRSPRecompiler::CompileCodeBlock(RspCodeBlock & block)
 {
     SetupRspAssembler();
@@ -452,6 +479,7 @@ void CRSPRecompiler::CompileCodeBlock(RspCodeBlock & block)
     m_RecompilerOps.EnterCodeBlock();
 
     const RspCodeBlock::Addresses & branchTargets = block.GetBranchTargets();
+    ClearBranchJump();
     for (uint32_t Target : branchTargets)
     {
         AddBranchJump(Target);
@@ -543,20 +571,9 @@ void * CRSPRecompiler::CompileHLETask(uint32_t Address, RspCodeBlocks & Function
     {
         // have code block in CRSPRecompiler and pass to RspCodeBlock, so it is the owner and sub functions are analysised once
         RspCodeBlock CodeInfo(m_System, Address, RspCodeType_TASK, EndBlockAddress, Functions);
-
-        RspCodeBlock::Addresses FunctionCalls = CodeInfo.GetFunctionCalls();
-        for (RspCodeBlock::Addresses::iterator itr = FunctionCalls.begin(); itr != FunctionCalls.end(); itr++)
+        if (!CompileSubFunctions(Functions, CodeInfo.GetFunctionCalls()))
         {
-            RspCodeBlocks::iterator funcitr = Functions.find(*itr);
-            if (funcitr == Functions.end())
-            {
-                return nullptr;
-            }
-            RspCodeBlockPtr & FuncCodeBlock = funcitr->second;
-            if (FuncCodeBlock->GetCompiledLocation() == nullptr)
-            {
-                CompileCodeBlock(*FuncCodeBlock);
-            }
+            return nullptr;
         }
         CompileCodeBlock(CodeInfo);
         funcPtr = CodeInfo.GetCompiledLocation();

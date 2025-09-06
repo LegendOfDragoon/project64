@@ -147,6 +147,30 @@ void RspCodeBlock::Analyze(void)
             return;
         }
     }
+    for (Addresses::iterator itr = m_BranchTargets.begin(); itr != m_BranchTargets.end();)
+    {
+        if (*itr < m_StartAddress || *itr > Address)
+        {
+            if (m_CodeType == RspCodeType_SUBROUTINE)
+            {
+                uint32_t target = *itr;
+                if (std::find(m_FunctionCalls.begin(), m_FunctionCalls.end(), target) == m_FunctionCalls.end())
+                {
+                    m_FunctionCalls.insert(target);
+                }
+                itr = m_BranchTargets.erase(itr);
+            }
+            else
+            {
+                m_Valid = false;
+                return;
+            }
+        }
+        else
+        {
+            itr++;
+        }
+    }
     for (Addresses::iterator itr = m_FunctionCalls.begin(); itr != m_FunctionCalls.end(); itr++)
     {
         if (m_Functions.find(*itr) == m_Functions.end())

@@ -148,6 +148,16 @@ void RspAssembler::CompX86regToVariable(void * Variable, const char * VariableNa
     cmp(Reg, asmjit::x86::dword_ptr((uint64_t)Variable));
 }
 
+void RspAssembler::JFunc(void * FunctPtr, const char * FunctName)
+{
+    if (LogAsmCode)
+    {
+        AddNumberSymbol((uint64_t)FunctPtr, FunctName);
+    }
+    mov(asmjit::x86::r11, (uint64_t)FunctPtr);
+    jmp(asmjit::x86::r11);
+}
+
 void RspAssembler::JeLabel(const char * LabelName, asmjit::Label & JumpLabel)
 {
     if (LogAsmCode)
@@ -236,6 +246,15 @@ void RspAssembler::SetgVariable(void * Variable, const char * VariableName)
         AddNumberSymbol((uint64_t)Variable, VariableName);
     }
     setg(asmjit::x86::byte_ptr((uint64_t)Variable));
+}
+
+void RspAssembler::SetnzVariable(void * Variable, const char * VariableName)
+{
+    if (LogAsmCode)
+    {
+        AddNumberSymbol((uint64_t)Variable, VariableName);
+    }
+    setnz(asmjit::x86::byte_ptr((uint64_t)Variable));
 }
 
 void RspAssembler::SetzVariable(void * Variable, const char * VariableName)
