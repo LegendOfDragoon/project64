@@ -25,7 +25,7 @@ public:
     ~CRSPRecompiler();
 
     void Reset();
-    void * CompileHLETask(uint32_t Address, RspCodeBlocks & Functions, const uint32_t EndBlockAddress);
+    void * CompileHLETask(uint32_t Address, RspCodeBlocks & Functions, const uint32_t DispatchAddress);
     void Log(_Printf_format_string_ const char * Text, ...);
 
     static void * GetAddressOf(int32_t value, ...);

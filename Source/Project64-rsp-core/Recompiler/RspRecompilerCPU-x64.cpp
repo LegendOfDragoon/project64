@@ -472,6 +472,14 @@ void CRSPRecompiler::CompileCodeBlock(RspCodeBlock & block)
     void * funcPtr = RecompPos;
     m_CompilePC = block.GetStartAddress();
     Log("====== Block %d ======", m_BlockID++);
+    if (block.CodeType() == RspCodeType_TASK)
+    {
+        Log("code type: task");
+    }
+    else if (block.CodeType() == RspCodeType_SUBROUTINE)
+    {
+        Log("code type: subroutine");
+    }
     Log("asm code at: %016llX", (uint64_t)funcPtr);
     Log("Jump table: %X", Table);
     Log("Start of block: %X", m_CompilePC);
@@ -563,14 +571,14 @@ void CRSPRecompiler::CompileCodeBlock(RspCodeBlock & block)
     m_CurrentBlock = nullptr;
 }
 
-void * CRSPRecompiler::CompileHLETask(uint32_t Address, RspCodeBlocks & Functions, const uint32_t EndBlockAddress)
+void * CRSPRecompiler::CompileHLETask(uint32_t Address, RspCodeBlocks & Functions, const uint32_t DispatchAddress)
 {
     void * funcPtr = nullptr;
     bool compile = true;
     if (compile)
     {
         // have code block in CRSPRecompiler and pass to RspCodeBlock, so it is the owner and sub functions are analysised once
-        RspCodeBlock CodeInfo(m_System, Address, RspCodeType_TASK, EndBlockAddress, Functions);
+        RspCodeBlock CodeInfo(m_System, Address, RspCodeType_TASK, DispatchAddress, Functions);
         if (!CompileSubFunctions(Functions, CodeInfo.GetFunctionCalls()))
         {
             return nullptr;
