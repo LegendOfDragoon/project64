@@ -41,6 +41,7 @@ private:
     void BuildRecompilerCPU(void);
     bool CompileSubFunctions(RspCodeBlocks & Functions, const RspCodeBlock::Addresses & Addresses);
     void CompileCodeBlock(RspCodeBlock & block);
+    void CompileOpcode(uint32_t PC);
     void handleError(asmjit::Error err, const char * message, asmjit::BaseEmitter * origin);
     void SetupRspAssembler();
 

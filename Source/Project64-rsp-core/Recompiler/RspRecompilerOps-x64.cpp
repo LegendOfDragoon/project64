@@ -36,6 +36,10 @@ CRSPRecompilerOps::CRSPRecompilerOps(CRSPSystem & System, CRSPRecompiler & Recom
 void CRSPRecompilerOps::Cheat_r4300iOpcode(RSPOp::Func FunctAddress, const char * FunctName)
 {
     m_Recompiler.Log("  %X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str());
+    if (SyncCPU)
+    {
+        m_Assembler->MoveConstToVariable(m_System.m_SP_PC_REG, "RSP PC", m_CompilePC);
+    }
     m_Assembler->MoveConstToVariable(&m_System.m_OpCode.Value, "m_OpCode.Value", m_OpCode.Value);
     m_Assembler->CallThis(&RSPSystem.m_Op, AddressOf(FunctAddress), FunctName);
 }
@@ -91,7 +95,7 @@ void CRSPRecompilerOps::JAL(void)
         m_Assembler->MoveConstToVariable(&m_GPR[31].UW, "RA.W", (m_CompilePC + 8) & 0x1FFC);
         m_NextInstruction = RSPPIPELINE_DO_DELAY_SLOT;
     }
-    else if (m_NextInstruction == RSPPIPELINE_DELAY_SLOT_DONE)
+    else if (m_NextInstruction == RSPPIPELINE_DELAY_SLOT_DONE || m_NextInstruction == RSPPIPELINE_DELAY_SLOT_DONE_BRANCH_TARGET)
     {
         uint32_t Target = (m_OpCode.target << 2) & 0x1FFC;
         if (m_CurrentBlock->IsEnd(m_CompilePC) && m_CurrentBlock->CodeType() == RspCodeType_TASK)
@@ -104,12 +108,28 @@ void CRSPRecompilerOps::JAL(void)
             const RspCodeBlock * FunctionBlock = m_CurrentBlock ? m_CurrentBlock->GetFunctionBlock(Target) : nullptr;
             if (FunctionBlock != nullptr)
             {
+                if (SyncCPU)
+                {
+                    m_Assembler->MoveConstToVariable(m_System.m_SP_PC_REG, "RSP PC", Target);
+                    m_Assembler->mov(asmjit::x86::rdx, asmjit::imm(0x2000));
+                    m_Assembler->mov(asmjit::x86::r8, asmjit::imm(Target & 0xFFF));
+                    m_Assembler->CallThis(RSPSystem.SyncSystem(), AddressOf(&CRSPSystem::ExecuteOps), "CRSPSystem::ExecuteOps");
+                    m_Assembler->CallThis(&RSPSystem, AddressOf(&CRSPSystem::BasicSyncCheck), "CRSPSystem::BasicSyncCheck");
+                }
                 m_Assembler->CallFunc(FunctionBlock->GetCompiledLocation(), stdstr_f("0x%X", Target).c_str());
             }
             else
             {
                 g_Notify->BreakPoint(__FILE__, __LINE__);
             }
+        }
+
+        if (m_NextInstruction == RSPPIPELINE_DELAY_SLOT_DONE_BRANCH_TARGET)
+        {
+            asmjit::Label Jump = m_Assembler->newLabel();
+            m_Assembler->JmpLabel(stdstr_f("0x%X_continue", m_CompilePC).c_str(), Jump);
+            m_Recompiler.CompileOpcode((m_CompilePC + 4) & 0x1FFC);
+            m_Assembler->bind(Jump);
         }
     }
     else

@@ -65,6 +65,7 @@ private:
 
     void SetupCommandList(const TASK_INFO & TaskInfo, HLETaskBooter bootType);
     void ExecuteTask_1a13a51a(const TASK_INFO & TaskInfo);
+    void ExecuteTask_c2193700(const TASK_INFO & TaskInfo);
     void SetupTask_CAB15710(const TASK_INFO & TaskInfo);
     void SetupTask_B4C62BFC(const TASK_INFO & TaskInfo);
 

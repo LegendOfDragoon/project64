@@ -505,12 +505,17 @@ void CRSPRecompiler::CompileCodeBlock(RspCodeBlock & block)
         m_CompilePC = instruction.Address();
         m_OpCode.Value = instruction.Value();
 
-        if (m_NextInstruction == RSPPIPELINE_NORMAL)
+        BranchTargets::const_iterator labelItr = m_BranchTargets.find(m_CompilePC);
+        bool JumpTarget = false;
+        if (labelItr != m_BranchTargets.end())
         {
-            BranchTargets::const_iterator labelItr = m_BranchTargets.find(m_CompilePC);
-            if (labelItr != m_BranchTargets.end())
+            if (m_NextInstruction == RSPPIPELINE_NORMAL)
             {
                 m_Assembler->bind(labelItr->second);
+            }
+            else if (m_NextInstruction == RSPPIPELINE_DELAY_SLOT)
+            {
+                JumpTarget = true;
             }
         }
         (m_RecompilerOps.*RSP_Recomp_Opcode[m_OpCode.op])();
@@ -529,10 +534,11 @@ void CRSPRecompiler::CompileCodeBlock(RspCodeBlock & block)
             instructionIndex += 1;
             break;
         case RSPPIPELINE_DELAY_SLOT:
-            m_NextInstruction = RSPPIPELINE_DELAY_SLOT_DONE;
+            m_NextInstruction = JumpTarget ? RSPPIPELINE_DELAY_SLOT_DONE_BRANCH_TARGET : RSPPIPELINE_DELAY_SLOT_DONE;
             instructionIndex -= 1;
             break;
         case RSPPIPELINE_DELAY_SLOT_DONE:
+        case RSPPIPELINE_DELAY_SLOT_DONE_BRANCH_TARGET:
             m_NextInstruction = RSPPIPELINE_NORMAL;
             instructionIndex += 2;
             break;
@@ -569,6 +575,35 @@ void CRSPRecompiler::CompileCodeBlock(RspCodeBlock & block)
         m_CodeLog.clear();
     }
     m_CurrentBlock = nullptr;
+}
+
+void CRSPRecompiler::CompileOpcode(uint32_t PC)
+{
+    const RSPInstructions & instructions = m_CurrentBlock->GetInstructions();
+    bool found = false;
+    for (size_t i = 0, n = instructions.size(); i < n; i++)
+    {
+        if (instructions[i].Address() != PC)
+        {
+            continue;
+        }
+        m_CompilePC = instructions[i].Address();
+        m_OpCode.Value = instructions[i].Value();
+        found = true;
+        break;
+    }
+
+    if (!found)
+    {
+        g_Notify->BreakPoint(__FILE__, __LINE__);
+        return;
+    }
+    BranchTargets::const_iterator labelItr = m_BranchTargets.find(m_CompilePC);
+    if (labelItr != m_BranchTargets.end())
+    {
+        m_Assembler->bind(labelItr->second);
+    }
+    (m_RecompilerOps.*RSP_Recomp_Opcode[m_OpCode.op])();
 }
 
 void * CRSPRecompiler::CompileHLETask(uint32_t Address, RspCodeBlocks & Functions, const uint32_t DispatchAddress)
