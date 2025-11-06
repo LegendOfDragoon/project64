@@ -1158,12 +1158,12 @@ void CN64System::SyncSystem()
         ErrorFound = true;
     }
 #endif
-    if (m_Reg.m_PROGRAM_COUNTER != m_SyncCPU->m_Reg.m_PROGRAM_COUNTER)
-    {
-        ErrorFound = true;
-    }
     if (b32BitCore())
     {
+        if ((uint32_t)m_Reg.m_PROGRAM_COUNTER != (uint32_t)m_SyncCPU->m_Reg.m_PROGRAM_COUNTER)
+        {
+            ErrorFound = true;
+        }
         for (int count = 0; count < 32; count++)
         {
             if (m_Reg.m_GPR[count].W[0] != m_SyncCPU->m_Reg.m_GPR[count].W[0])
@@ -1182,6 +1182,10 @@ void CN64System::SyncSystem()
     }
     else
     {
+        if (m_Reg.m_PROGRAM_COUNTER != m_SyncCPU->m_Reg.m_PROGRAM_COUNTER)
+        {
+            ErrorFound = true;
+        }
         for (int count = 0; count < 32; count++)
         {
             if (m_Reg.m_GPR[count].DW != m_SyncCPU->m_Reg.m_GPR[count].DW)
