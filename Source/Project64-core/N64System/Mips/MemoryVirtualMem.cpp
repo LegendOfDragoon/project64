@@ -945,7 +945,8 @@ bool CMipsMemoryVM::SD_PhysicalAddress(uint32_t PAddr, uint64_t Value)
         if (PAddr < RdramSize())
         {
             g_Recompiler->ClearRecompCode_Phys(PAddr & ~0xFFF, 0xFFC, CRecompiler::Remove_ProtectedMem);
-            *(uint64_t *)(m_RDRAM + PAddr) = Value;
+            *(uint32_t *)(m_RDRAM + PAddr) = *((uint32_t *)(&Value) + 1);
+            *(uint32_t *)(m_RDRAM + PAddr + 4) = *((uint32_t *)(&Value) + 0);
         }
         break;
     case 0x04000000: m_SPRegistersHandler.Write32(PAddr, (int32_t)(Value >> 32), 0xFFFFFFFF); break;
