@@ -4280,7 +4280,7 @@ void CX86RecompilerOps::SD()
             ValueReg = m_RegWorkingSet.IsUnknown(m_Opcode.rt) ? m_RegWorkingSet.Map_TempReg(x86Reg_Unknown, m_Opcode.rt, false, false) : m_RegWorkingSet.GetMipsRegMapLo(m_Opcode.rt);
         }
         uint64_t RtValue = 0;
-        asmjit::x86::Gp ValueRegHi, ValueRegLo;
+        asmjit::x86::Gp ValueRegHi;
         if (m_RegWorkingSet.IsConst(m_Opcode.rt))
         {
             RtValue = ((uint64_t)(m_RegWorkingSet.Is64Bit(m_Opcode.rt) ? m_RegWorkingSet.GetMipsRegHi(m_Opcode.rt) : (uint32_t)(m_RegWorkingSet.GetMipsRegLo_S(m_Opcode.rt) >> 31)) << 32) | m_RegWorkingSet.GetMipsRegLo(m_Opcode.rt);
@@ -4289,12 +4289,10 @@ void CX86RecompilerOps::SD()
         {
             m_RegWorkingSet.ProtectGPR(m_Opcode.rt);
             ValueRegHi = m_RegWorkingSet.Is64Bit(m_Opcode.rt) ? m_RegWorkingSet.GetMipsRegMapHi(m_Opcode.rt) : m_RegWorkingSet.Map_TempReg(x86Reg_Unknown, m_Opcode.rt, true, false);
-            ValueRegLo = m_RegWorkingSet.GetMipsRegMapLo(m_Opcode.rt);
         }
         else
         {
             ValueRegHi = m_RegWorkingSet.Map_TempReg(x86Reg_Unknown, m_Opcode.rt, true, false);
-            ValueRegLo = m_RegWorkingSet.Map_TempReg(x86Reg_Unknown, m_Opcode.rt, false, false);
         }
         CompileStoreMemoryValue(x86Reg_Unknown, ValueReg, ValueRegHi, RtValue, 64);
     }
