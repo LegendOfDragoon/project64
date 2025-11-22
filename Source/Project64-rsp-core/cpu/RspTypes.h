@@ -24,6 +24,47 @@ typedef union tagUDWORD
     uint8_t UB[8];
 } UDWORD;
 
+class RSPAccumulator
+{
+public:
+    RSPAccumulator();
+
+    int16_t & Low(uint8_t Index);
+    int16_t & Mid(uint8_t Index);
+    int16_t & High(uint8_t Index);
+
+    uint16_t & ULow(uint8_t Index);
+    uint16_t & UMid(uint8_t Index);
+    uint16_t & UHigh(uint8_t Index);
+
+#if defined(__i386__) || defined(_M_IX86)
+    int32_t & LowWord(uint8_t Index);
+    int32_t & HighWord(uint8_t Index);
+
+    uint32_t & ULowWord(uint8_t Index);
+    uint32_t & UHighWord(uint8_t Index);
+#endif
+
+    int64_t Get(uint8_t Index);
+    void Set(uint8_t Index, int64_t Value);
+
+    uint16_t Saturate(uint8_t el, bool HighValue);
+
+    void Reset(void);
+
+private:
+#if defined(__i386__) || defined(_M_IX86)
+    UDWORD m_Reg[8];
+#endif
+#if defined(__amd64__) || defined(_M_X64)
+#if defined(_MSC_VER)
+    uint64_t m_Reg[6] alignas(16);
+#else
+    uint64_t m_Reg[6];
+#endif
+#endif
+};
+
 class RSPVector
 {
 public:

@@ -229,7 +229,7 @@ private:
     RSPOpcode & m_OpCode;
     uint32_t & m_CompilePC;
     UWORD32 * m_GPR;
-    UDWORD * m_ACCUM;
+    RSPAccumulator & m_ACCUM;
     UWORD32 * m_Flags;
     RSPVector * m_Vect;
 };

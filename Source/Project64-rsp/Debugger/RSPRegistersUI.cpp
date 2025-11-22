@@ -685,7 +685,7 @@ void UpdateRSPRegistersScreen(void)
         case HiddenRegisters:
             for (count = 0; count < 8; count++)
             {
-                sprintf(RegisterValue, " 0x%08X - %08X", Reg.m_ACCUM[count].W[1], Reg.m_ACCUM[count].W[0]);
+                sprintf(RegisterValue, " 0x%04X - %04X - %04X", Reg.m_ACCUM.Low(count), Reg.m_ACCUM.Mid(count), Reg.m_ACCUM.High(count));
                 SetWindowTextA(hHIDDEN[count], RegisterValue);
             }
             for (count = 0; count < 3; count++)
