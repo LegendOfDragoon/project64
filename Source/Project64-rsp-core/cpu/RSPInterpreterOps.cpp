@@ -74,7 +74,6 @@ RSPOp::RSPOp(CRSPSystem & System) :
     m_DMEM(System.m_DMEM),
     m_GPR(System.m_Reg.m_GPR),
     m_ACCUM(System.m_Reg.m_ACCUM),
-    m_Flags(System.m_Reg.m_Flags),
     m_Vect(System.m_Reg.m_Vect),
     VCOL(System.m_Reg.VCOL),
     VCOH(System.m_Reg.VCOH),
@@ -931,10 +930,10 @@ void RSPOp::Cop2_CF(void)
 {
     switch ((m_OpCode.rd & 0x03))
     {
-    case 0: m_GPR[m_OpCode.rt].W = m_Flags[0].HW[0]; break;
-    case 1: m_GPR[m_OpCode.rt].W = m_Flags[1].HW[0]; break;
-    case 2: m_GPR[m_OpCode.rt].W = m_Flags[2].HW[0]; break;
-    case 3: m_GPR[m_OpCode.rt].W = m_Flags[2].HW[0]; break;
+    case 0: m_GPR[m_OpCode.rt].W = (int16_t)((VCOH.GetPacked() << 8) | VCOL.GetPacked()); break;
+    case 1: m_GPR[m_OpCode.rt].W = (int16_t)((VCCH.GetPacked() << 8) | VCCL.GetPacked()); break;
+    case 2: m_GPR[m_OpCode.rt].W = (uint8_t)VCE.GetPacked(); break;
+    case 3: m_GPR[m_OpCode.rt].W = (uint8_t)VCE.GetPacked(); break;
     }
 }
 
@@ -952,10 +951,18 @@ void RSPOp::Cop2_CT(void)
 {
     switch ((m_OpCode.rd & 0x03))
     {
-    case 0: m_Flags[0].HW[0] = m_GPR[m_OpCode.rt].HW[0]; break;
-    case 1: m_Flags[1].HW[0] = m_GPR[m_OpCode.rt].HW[0]; break;
-    case 2: m_Flags[2].B[0] = m_GPR[m_OpCode.rt].B[0]; break;
-    case 3: m_Flags[2].B[0] = m_GPR[m_OpCode.rt].B[0]; break;
+    case 0: 
+        VCOL.SetPacked(m_GPR[m_OpCode.rt].UB[0]);
+        VCOH.SetPacked(m_GPR[m_OpCode.rt].UB[1]);
+        break;
+    case 1: 
+        VCCL.SetPacked(m_GPR[m_OpCode.rt].UB[0]);
+        VCCH.SetPacked(m_GPR[m_OpCode.rt].UB[1]);
+        break;
+    case 2:
+    case 3:
+        VCE.SetPacked(m_GPR[m_OpCode.rt].UB[0]);
+        break;
     }
 }
 

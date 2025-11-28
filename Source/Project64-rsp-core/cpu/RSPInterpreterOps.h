@@ -206,7 +206,6 @@ private:
     uint8_t *& m_DMEM;
     UWORD32 * m_GPR;
     RSPAccumulator & m_ACCUM;
-    UWORD32 * m_Flags;
     RSPVector * m_Vect;
     RSPFlag &VCOL, &VCOH;
     RSPFlag &VCCL, &VCCH;

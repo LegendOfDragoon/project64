@@ -73,12 +73,7 @@ CGPRRegisters::CGPRRegisters(UWORD32 (&m_GPR)[32]) :
 {
 }
 
-CRSPRegisters::CRSPRegisters() :
-    VCOL(m_Flags[0].UB[0]),
-    VCOH(m_Flags[0].UB[1]),
-    VCCL(m_Flags[1].UB[0]),
-    VCCH(m_Flags[1].UB[1]),
-    VCE(m_Flags[2].UB[0])
+CRSPRegisters::CRSPRegisters()
 {
     Reset();
 }
@@ -86,7 +81,11 @@ CRSPRegisters::CRSPRegisters() :
 void CRSPRegisters::Reset(void)
 {
     memset(m_GPR, 0, sizeof(m_GPR));
-    memset(m_Flags, 0, sizeof(m_Flags));
+    VCOL.Clear();
+    VCOH.Clear();
+    VCCL.Clear(); 
+    VCCH.Clear();
+    VCE.Clear();
     m_ACCUM.Reset();
     for (size_t i = 0, n = sizeof(m_Vect) / sizeof(m_Vect[0]); i < n; i++)
     {

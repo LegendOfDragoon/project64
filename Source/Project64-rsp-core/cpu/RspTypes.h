@@ -91,16 +91,27 @@ private:
 class RSPFlag
 {
 public:
-    RSPFlag(uint8_t & Flag);
+    RSPFlag();
 
     void Clear(void);
     bool Set(uint8_t Index, bool Value);
     bool Get(uint8_t Index) const;
 
+    uint8_t GetPacked(void) const;
+    void SetPacked(uint8_t value);
+
+#if defined(__i386__) || defined(_M_IX86)
+    uint8_t & Value();
+#endif
+
 private:
-    RSPFlag();
     RSPFlag(const RSPFlag &);
     RSPFlag & operator=(const RSPFlag &);
 
-    uint8_t & m_Flag;
+#if defined(__i386__) || defined(_M_IX86)
+    uint8_t m_Flag;
+#endif
+#if defined(__amd64__) || defined(_M_X64)
+    alignas(16) uint16_t m_Flags[8];
+#endif
 };

@@ -121,7 +121,6 @@ public:
     void Reset(void);
 
     UWORD32 m_GPR[32];
-    UWORD32 m_Flags[4];
     RSPAccumulator m_ACCUM;
     RSPVector m_Vect[32];
     uint16_t m_Reciprocals[512];

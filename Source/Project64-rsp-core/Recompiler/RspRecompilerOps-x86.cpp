@@ -146,7 +146,11 @@ CRSPRecompilerOps::CRSPRecompilerOps(CRSPSystem & System, CRSPRecompiler & Recom
     m_Reg(System.m_Reg),
     m_GPR(System.m_Reg.m_GPR),
     m_ACCUM(System.m_Reg.m_ACCUM),
-    m_Flags(System.m_Reg.m_Flags),
+    m_VCOL(System.m_Reg.VCOL),
+    m_VCOH(System.m_Reg.VCOH),
+    m_VCCL(System.m_Reg.VCCL),
+    m_VCCH(System.m_Reg.VCCH),
+    m_VCE(System.m_Reg.VCE),
     m_Vect(System.m_Reg.m_Vect)
 {
 }
@@ -2442,7 +2446,7 @@ void CRSPRecompilerOps::Cop2_MF(void)
     }
 
 #ifndef Compile_Cop2
-    Cheat_r4300iOpcode(RSP_Cop2_MF, "RSP_Cop2_MF");
+    Cheat_r4300iOpcode(&RSPOp::Cop2_MF, "&RSPOp::Cop2_MF");
 #else
     char Reg[256];
     uint8_t element = (uint8_t)(m_OpCode.sa >> 1);
@@ -2482,23 +2486,29 @@ void CRSPRecompilerOps::Cop2_MF(void)
 void CRSPRecompilerOps::Cop2_CF(void)
 {
 #ifndef Compile_Cop2
-    Cheat_r4300iOpcode(RSP_Cop2_CF, "RSP_Cop2_CF");
+    Cheat_r4300iOpcode(&RSPOp::Cop2_CF, "&RSPOp::Cop2_CF");
 #else
     CPU_Message("  %X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str());
 
     switch ((m_OpCode.rd & 0x03))
     {
     case 0:
-        MoveSxVariableToX86regHalf(&m_Flags[0].HW[0], "m_Flags[0].HW[0]", x86_EAX);
+        MoveSxVariableToX86regByte(&m_VCOH.Value(), "&m_VCOH.Value()", x86_EAX);
+        ShiftLeftSignImmed(x86_EAX, 8);
+        MoveZxVariableToX86regByte(&m_VCOL.Value(), "&m_VCOL.Value()", x86_EBX);
+        OrX86RegToX86Reg(x86_EAX, x86_EBX);
         MoveX86regToVariable(x86_EAX, &m_GPR[m_OpCode.rt].W, GPR_Name(m_OpCode.rt));
         break;
     case 1:
-        MoveSxVariableToX86regHalf(&m_Flags[1].HW[0], "m_Flags[1].HW[0]", x86_EAX);
+        MoveSxVariableToX86regByte(&m_VCCH.Value(), "&m_VCCH.Value()", x86_EAX);
+        ShiftLeftSignImmed(x86_EAX, 8);
+        MoveZxVariableToX86regByte(&m_VCCL.Value(), "&m_VCCL.Value()", x86_EBX);
+        OrX86RegToX86Reg(x86_EAX, x86_EBX);
         MoveX86regToVariable(x86_EAX, &m_GPR[m_OpCode.rt].W, GPR_Name(m_OpCode.rt));
         break;
     case 2:
     case 3:
-        MoveSxVariableToX86regHalf(&m_Flags[2].HW[0], "m_Flags[2].HW[0]", x86_EAX);
+        MoveZxVariableToX86regByte(&m_VCE.Value(), "&m_VCE.Value()", x86_EAX);
         MoveX86regToVariable(x86_EAX, &m_GPR[m_OpCode.rt].W, GPR_Name(m_OpCode.rt));
         break;
     }
@@ -2508,7 +2518,7 @@ void CRSPRecompilerOps::Cop2_CF(void)
 void CRSPRecompilerOps::Cop2_MT(void)
 {
 #ifndef Compile_Cop2
-    Cheat_r4300iOpcode(RSP_Cop2_MT, "RSP_Cop2_MT");
+    Cheat_r4300iOpcode(&RSPOp::Cop2_MT, "&RSPOp::Cop2_MT");
 #else
     CPU_Message("  %X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str());
 
@@ -2537,7 +2547,7 @@ void CRSPRecompilerOps::Cop2_MT(void)
 void CRSPRecompilerOps::Cop2_CT(void)
 {
 #ifndef Compile_Cop2
-    Cheat_r4300iOpcode(RSP_Cop2_CT, "RSP_Cop2_CT");
+    Cheat_r4300iOpcode(&RSPOp::Cop2_CT, "&RSPOp::Cop2_CT");
 #else
     CPU_Message("  %X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str());
 
@@ -2546,14 +2556,16 @@ void CRSPRecompilerOps::Cop2_CT(void)
         switch ((m_OpCode.rd & 0x03))
         {
         case 0:
-            MoveConstHalfToVariable(0, &m_Flags[0].HW[0], "m_Flags[0].HW[0]");
+            MoveConstByteToVariable(0, &m_VCOL.Value(), "&m_VCOL.Value()");
+            MoveConstByteToVariable(0, &m_VCOH.Value(), "&m_VCOH.Value()");
             break;
         case 1:
-            MoveConstHalfToVariable(0, &m_Flags[1].HW[0], "m_Flags[1].HW[0]");
+            MoveConstByteToVariable(0, &m_VCCL.Value(), "&m_VCCL.Value()");
+            MoveConstByteToVariable(0, &m_VCCH.Value(), "&m_VCCH.Value()");
             break;
         case 2:
         case 3:
-            MoveConstByteToVariable(0, &m_Flags[2].B[0], "m_Flags[2].B[0]");
+            MoveConstByteToVariable(0, &m_VCE.Value(), "&m_VCE.Value()");
             break;
         }
     }
@@ -2563,16 +2575,20 @@ void CRSPRecompilerOps::Cop2_CT(void)
         {
         case 0:
             MoveVariableToX86regHalf(&m_GPR[m_OpCode.rt].HW[0], GPR_Name(m_OpCode.rt), x86_EAX);
-            MoveX86regHalfToVariable(x86_EAX, &m_Flags[0].HW[0], "m_Flags[0].HW[0]");
+            MoveX86regByteToVariable(x86_EAX, &m_VCOL.Value(), "&m_VCOL.Value()");
+            ShiftRightSignImmed(x86_EAX, 8);
+            MoveX86regByteToVariable(x86_EAX, &m_VCOH.Value(), "&m_VCOH.Value()");
             break;
         case 1:
             MoveVariableToX86regHalf(&m_GPR[m_OpCode.rt].HW[0], GPR_Name(m_OpCode.rt), x86_EAX);
-            MoveX86regHalfToVariable(x86_EAX, &m_Flags[1].HW[0], "m_Flags[1].HW[0]");
+            MoveX86regByteToVariable(x86_EAX, &m_VCCL.Value(), "&m_VCCL.Value()");
+            ShiftRightSignImmed(x86_EAX, 8);
+            MoveX86regByteToVariable(x86_EAX, &m_VCCH.Value(), "&m_VCCH.Value()");
             break;
         case 2:
         case 3:
             MoveVariableToX86regByte(&m_GPR[m_OpCode.rt].B[0], GPR_Name(m_OpCode.rt), x86_EAX);
-            MoveX86regByteToVariable(x86_EAX, &m_Flags[2].B[0], "m_Flags[2].B[0]");
+            MoveX86regByteToVariable(x86_EAX, &m_VCE.Value(), "&m_VCE.Value()");
             break;
         }
     }
@@ -5150,9 +5166,10 @@ void CRSPRecompilerOps::Vector_VADD(void)
     }
 
     // Used for invoking x86 carry flag
-    XorX86RegToX86Reg(x86_ECX, x86_ECX);
+    XorX86RegToX86Reg(x86_EBP, x86_EBP);
     Push(x86_EBP);
-    MoveVariableToX86reg(&m_Flags[0].UW, "m_Flags[0].UW", x86_EBP);
+    XorX86RegToX86Reg(x86_ECX, x86_ECX);
+    MoveVariableToX86regByte(&m_VCOL.Value(), "&m_VCOL.Value()", x86_ECX);
 
     for (count = 0; count < 8; count++)
     {
@@ -5169,9 +5186,9 @@ void CRSPRecompilerOps::Vector_VADD(void)
             MoveSxVariableToX86regHalf(&m_Vect[m_OpCode.vt].s16(del), Reg, x86_EBX);
         }
 
-        MoveX86RegToX86Reg(x86_EBP, x86_EDX);
+        MoveX86RegToX86Reg(x86_ECX, x86_EDX);
         AndConstToX86Reg(x86_EDX, 1 << (7 - el));
-        CompX86RegToX86Reg(x86_ECX, x86_EDX);
+        CompX86RegToX86Reg(x86_EBP, x86_EDX);
 
         AdcX86RegToX86Reg(x86_EAX, x86_EBX);
 
@@ -5191,7 +5208,8 @@ void CRSPRecompilerOps::Vector_VADD(void)
             MoveX86regHalfToVariable(x86_EAX, &m_Vect[m_OpCode.vd].s16(el), Reg);
         }
     }
-    MoveConstToVariable(0, &m_Flags[0].UW, "m_Flags[0].UW");
+    MoveConstByteToVariable(0, &m_VCOL.Value(), "&m_VCOL.Value()");
+    MoveConstByteToVariable(0, &m_VCOH.Value(), "&m_VCOH.Value()");
     Pop(x86_EBP);
 #endif
 }
@@ -5275,8 +5293,9 @@ void CRSPRecompilerOps::Vector_VSUB(void)
     Push(x86_EBP);
 
     // Used for invoking the x86 carry flag
+    XorX86RegToX86Reg(x86_EBP, x86_EBP);
     XorX86RegToX86Reg(x86_ECX, x86_ECX);
-    MoveVariableToX86reg(&m_Flags[0].UW, "m_Flags[0].UW", x86_EBP);
+    MoveVariableToX86regByte(&m_VCOL.Value(), "&m_VCOL.Value()", x86_ECX);
 
     if (bOptimize)
     {
@@ -5307,9 +5326,9 @@ void CRSPRecompilerOps::Vector_VSUB(void)
             MoveSxVariableToX86regHalf(&m_Vect[m_OpCode.vt].s16(del), Reg, x86_EBX);
         }
 
-        MoveX86RegToX86Reg(x86_EBP, x86_EDX);
+        MoveX86RegToX86Reg(x86_ECX, x86_EDX);
         AndConstToX86Reg(x86_EDX, 1 << (7 - el));
-        CompX86RegToX86Reg(x86_ECX, x86_EDX);
+        CompX86RegToX86Reg(x86_EBP, x86_EDX);
 
         SbbX86RegToX86Reg(x86_EAX, x86_EBX);
 
@@ -5331,7 +5350,8 @@ void CRSPRecompilerOps::Vector_VSUB(void)
         }
     }
 
-    MoveConstToVariable(0, &m_Flags[0].UW, "m_Flags[0].UW");
+    MoveConstByteToVariable(0, &m_VCOL.Value(), "&m_VCOL.Value()");
+    MoveConstByteToVariable(0, &m_VCOH.Value(), "&m_VCOH.Value()");
     Pop(x86_EBP);
 #endif
 }
@@ -5592,7 +5612,8 @@ void CRSPRecompilerOps::Vector_VADDC(void)
             MoveX86regHalfToVariable(x86_EAX, &m_Vect[m_OpCode.vd].s16(el), Reg);
         }
     }
-    MoveX86regToVariable(x86_ECX, &m_Flags[0].UW, "m_Flags[0].UW");
+    MoveX86regByteToVariable(x86_ECX, &m_VCOL.Value(), "&m_VCOL.Value()");
+    MoveConstByteToVariable(0, &m_VCOH.Value(), "&m_VCOH.Value()");
     Pop(x86_EBP);
 #endif
 }
@@ -5660,8 +5681,10 @@ void CRSPRecompilerOps::Vector_VSUBC(void)
             sprintf(Reg, "m_Vect[%i].HW[%i]", m_OpCode.sa, el);
             MoveX86regHalfToVariable(x86_EAX, &m_Vect[m_OpCode.vd].s16(el), Reg);
         }
-    }
-    MoveX86regToVariable(x86_ECX, &m_Flags[0].UW, "m_Flags[0].UW");
+    }   
+    MoveX86regByteToVariable(x86_ECX, &m_VCOL.Value(), "&m_VCOL.Value()");
+    ShiftRightSignImmed(x86_ECX, 8);
+    MoveX86regByteToVariable(x86_ECX, &m_VCOH.Value(), "&m_VCOH.Value()");
 #endif
 }
 
@@ -5966,6 +5989,7 @@ void CRSPRecompilerOps::Vector_VNE(void)
 #endif
 }
 
+#ifdef CompileVge
 bool CRSPRecompilerOps::Compile_Vector_VGE_MMX(void)
 {
     char Reg[256];
@@ -6012,6 +6036,7 @@ bool CRSPRecompilerOps::Compile_Vector_VGE_MMX(void)
     MoveConstToVariable(0, &m_Flags[0].UW, "m_Flags[0].UW");
     return true;
 }
+#endif
 
 void CRSPRecompilerOps::Vector_VGE(void)
 {

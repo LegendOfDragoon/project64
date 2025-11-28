@@ -186,18 +186,27 @@ uint64_t & RSPVector::u64(uint8_t Index)
     return m_Reg[Index];
 }
 
-RSPFlag::RSPFlag(uint8_t & Flag) :
-    m_Flag(Flag)
+RSPFlag::RSPFlag() 
 {
+    Clear();
 }
 
 void RSPFlag::Clear(void)
 {
+#if defined(__i386__) || defined(_M_IX86)
     m_Flag = 0;
+#endif
+#if defined(__amd64__) || defined(_M_X64)
+    for (int i = 0; i < 8; i++)
+    {
+        m_Flags[i] = 0;
+    }
+#endif
 }
 
 bool RSPFlag::Set(uint8_t Index, bool Value)
 {
+#if defined(__i386__) || defined(_M_IX86)
     if (Value)
     {
         m_Flag |= (1 << (7 - Index));
@@ -206,10 +215,57 @@ bool RSPFlag::Set(uint8_t Index, bool Value)
     {
         m_Flag &= ~(1 << (7 - Index));
     }
+#endif
+#if defined(__amd64__) || defined(_M_X64)
+    m_Flags[Index] = Value ? 1 : 0; 
+#endif
     return Value;
 }
 
 bool RSPFlag::Get(uint8_t Index) const
 {
+#if defined(__i386__) || defined(_M_IX86)
     return (m_Flag & (1 << (7 - Index))) != 0;
+#endif
+#if defined(__amd64__) || defined(_M_X64)
+    return m_Flags[Index] != 0;
+#endif
 }
+
+uint8_t RSPFlag::GetPacked(void) const
+{
+#if defined(__i386__) || defined(_M_IX86)
+    return m_Flag;
+#endif
+#if defined(__amd64__) || defined(_M_X64)
+    uint8_t result = 0;
+    for (int i = 0; i < 8; i++)
+    {
+        if (m_Flags[i])
+        {
+            result |= (1 << (7 - i));
+        }
+    }
+    return result;
+#endif
+}
+
+void RSPFlag::SetPacked(uint8_t value)
+{
+#if defined(__i386__) || defined(_M_IX86)
+    m_Flag = value;
+#endif
+#if defined(__amd64__) || defined(_M_X64)
+    for (int i = 0; i < 8; i++)
+    {
+        m_Flags[i] = (value & (1 << (7 - i))) ? 1 : 0;
+    }
+#endif
+}
+
+#if defined(__i386__) || defined(_M_IX86)
+uint8_t & RSPFlag::Value()
+{
+    return m_Flag;
+}
+#endif
