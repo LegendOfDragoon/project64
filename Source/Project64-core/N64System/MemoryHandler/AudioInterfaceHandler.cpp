@@ -297,6 +297,13 @@ void AudioInterfaceHandler::LenChanged()
     if (g_Plugins->Audio()->AiLenChanged != nullptr)
     {
         WriteTrace(TraceAudio, TraceDebug, "Calling plugin AiLenChanged");
+        if (bShowCPUPer() && (bBasicMode() || bLimitFPS()) && bSyncToAudio())
+        {
+            CProfiling & CPU_Usage = m_System.CPUProfiler();
+            PROFILE_TIMERS PreviousType = CPU_Usage.StartTimer(Timer_Idel);
+            g_Plugins->Audio()->AiLenChanged();
+            CPU_Usage.StartTimer(PreviousType);
+        }
         g_Plugins->Audio()->AiLenChanged();
         WriteTrace(TraceAudio, TraceDebug, "Plugin AiLenChanged Done");
     }

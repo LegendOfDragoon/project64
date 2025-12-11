@@ -2412,3 +2412,8 @@ void CN64System::TLB_Unmaped(uint32_t VAddr, uint32_t Len)
         m_Recomp->ClearRecompCode_Virt(VAddr, Len, CRecompiler::Remove_TLB);
     }
 }
+
+CProfiling & CN64System::CPUProfiler()
+{
+    return m_CPU_Usage;
+}

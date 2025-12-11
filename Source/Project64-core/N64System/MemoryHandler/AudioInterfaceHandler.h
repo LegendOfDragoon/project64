@@ -3,6 +3,7 @@
 #include <Project64-core\Logging.h>
 #include <Project64-core\Settings\DebugSettings.h>
 #include <Project64-core\Settings\GameSettings.h>
+#include <Project64-core\Settings\N64SystemSettings.h>
 #include <stdint.h>
 
 enum
@@ -37,6 +38,7 @@ class CPlugins;
 class AudioInterfaceHandler :
     public MemoryHandler,
     public AudioInterfaceReg,
+    private CN64SystemSettings,
     private CGameSettings,
     private CDebugSettings,
     private CLogging

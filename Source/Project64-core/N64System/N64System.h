@@ -107,6 +107,7 @@ public:
     void UpdateSyncCPU(uint32_t const Cycles);
     void SyncSystem();
     void SyncSystemPC();
+    CProfiling & CPUProfiler();
 
     CPlugins * GetPlugins()
     {
