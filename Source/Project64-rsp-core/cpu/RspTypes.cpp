@@ -186,7 +186,7 @@ uint64_t & RSPVector::u64(uint8_t Index)
     return m_Reg[Index];
 }
 
-RSPFlag::RSPFlag() 
+RSPFlag::RSPFlag()
 {
     Clear();
 }
@@ -217,7 +217,7 @@ bool RSPFlag::Set(uint8_t Index, bool Value)
     }
 #endif
 #if defined(__amd64__) || defined(_M_X64)
-    m_Flags[Index] = Value ? 1 : 0; 
+    m_Flags[Index] = Value ? 1 : 0;
 #endif
     return Value;
 }
@@ -267,5 +267,12 @@ void RSPFlag::SetPacked(uint8_t value)
 uint8_t & RSPFlag::Value()
 {
     return m_Flag;
+}
+#endif
+
+#if defined(__amd64__) || defined(_M_X64)
+uint8_t * RSPFlag::Value()
+{
+    return (uint8_t *)&m_Flags[0];
 }
 #endif

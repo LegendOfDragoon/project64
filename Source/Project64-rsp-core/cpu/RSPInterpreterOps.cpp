@@ -75,11 +75,11 @@ RSPOp::RSPOp(CRSPSystem & System) :
     m_GPR(System.m_Reg.m_GPR),
     m_ACCUM(System.m_Reg.m_ACCUM),
     m_Vect(System.m_Reg.m_Vect),
-    VCOL(System.m_Reg.VCOL),
-    VCOH(System.m_Reg.VCOH),
-    VCCL(System.m_Reg.VCCL),
-    VCCH(System.m_Reg.VCCH),
-    VCE(System.m_Reg.VCE),
+    VCOL(System.m_Reg.m_VCOL),
+    VCOH(System.m_Reg.m_VCOH),
+    VCCL(System.m_Reg.m_VCCL),
+    VCCH(System.m_Reg.m_VCCH),
+    VCE(System.m_Reg.m_VCE),
     CheckInterrupts(System.CheckInterrupts),
     ProcessRdpList(System.ProcessRdpList)
 {
@@ -951,11 +951,11 @@ void RSPOp::Cop2_CT(void)
 {
     switch ((m_OpCode.rd & 0x03))
     {
-    case 0: 
+    case 0:
         VCOL.SetPacked(m_GPR[m_OpCode.rt].UB[0]);
         VCOH.SetPacked(m_GPR[m_OpCode.rt].UB[1]);
         break;
-    case 1: 
+    case 1:
         VCCL.SetPacked(m_GPR[m_OpCode.rt].UB[0]);
         VCCH.SetPacked(m_GPR[m_OpCode.rt].UB[1]);
         break;

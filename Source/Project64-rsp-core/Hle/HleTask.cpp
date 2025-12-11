@@ -158,7 +158,6 @@ void CHleTask::ExecuteTask_1a13a51a(const TASK_INFO & TaskInfo)
     GPR_K1 = TaskInfo.DataSize;
     GPR_SP = 0x380;
     GPR_S8 = 0x140;
-    static uint32_t TaskCount = 0;
     for (;;)
     {
         GPR_K0 = *((uint32_t *)(m_DMEM + GPR_SP));
@@ -227,7 +226,6 @@ void CHleTask::ExecuteTask_1a13a51a(const TASK_INFO & TaskInfo)
                 RSPSystem.BasicSyncCheck();
             }
         }
-        TaskCount += 1;
     }
 }
 

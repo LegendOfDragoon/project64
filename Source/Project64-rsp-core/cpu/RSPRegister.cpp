@@ -81,11 +81,11 @@ CRSPRegisters::CRSPRegisters()
 void CRSPRegisters::Reset(void)
 {
     memset(m_GPR, 0, sizeof(m_GPR));
-    VCOL.Clear();
-    VCOH.Clear();
-    VCCL.Clear(); 
-    VCCH.Clear();
-    VCE.Clear();
+    m_VCOL.Clear();
+    m_VCOH.Clear();
+    m_VCCL.Clear();
+    m_VCCH.Clear();
+    m_VCE.Clear();
     m_ACCUM.Reset();
     for (size_t i = 0, n = sizeof(m_Vect) / sizeof(m_Vect[0]); i < n; i++)
     {

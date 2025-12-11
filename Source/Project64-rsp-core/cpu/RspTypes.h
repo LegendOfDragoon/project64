@@ -103,6 +103,9 @@ public:
 #if defined(__i386__) || defined(_M_IX86)
     uint8_t & Value();
 #endif
+#if defined(__amd64__) || defined(_M_X64)
+    uint8_t * Value();
+#endif
 
 private:
     RSPFlag(const RSPFlag &);

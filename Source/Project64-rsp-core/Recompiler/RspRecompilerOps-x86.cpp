@@ -146,11 +146,11 @@ CRSPRecompilerOps::CRSPRecompilerOps(CRSPSystem & System, CRSPRecompiler & Recom
     m_Reg(System.m_Reg),
     m_GPR(System.m_Reg.m_GPR),
     m_ACCUM(System.m_Reg.m_ACCUM),
-    m_VCOL(System.m_Reg.VCOL),
-    m_VCOH(System.m_Reg.VCOH),
-    m_VCCL(System.m_Reg.VCCL),
-    m_VCCH(System.m_Reg.VCCH),
-    m_VCE(System.m_Reg.VCE),
+    m_VCOL(System.m_Reg.m_VCOL),
+    m_VCOH(System.m_Reg.m_VCOH),
+    m_VCCL(System.m_Reg.m_VCCL),
+    m_VCCH(System.m_Reg.m_VCCH),
+    m_VCE(System.m_Reg.m_VCE),
     m_Vect(System.m_Reg.m_Vect)
 {
 }
@@ -5681,7 +5681,7 @@ void CRSPRecompilerOps::Vector_VSUBC(void)
             sprintf(Reg, "m_Vect[%i].HW[%i]", m_OpCode.sa, el);
             MoveX86regHalfToVariable(x86_EAX, &m_Vect[m_OpCode.vd].s16(el), Reg);
         }
-    }   
+    }
     MoveX86regByteToVariable(x86_ECX, &m_VCOL.Value(), "&m_VCOL.Value()");
     ShiftRightSignImmed(x86_ECX, 8);
     MoveX86regByteToVariable(x86_ECX, &m_VCOH.Value(), "&m_VCOH.Value()");

@@ -562,6 +562,7 @@ void CRSPRecompiler::CompileCodeBlock(RspCodeBlock & block)
     }
 
     block.SetCompiledLocation(funcPtr);
+    m_Assembler->finalize();
     m_CodeHolder.relocateToBase((uint64_t)funcPtr);
     size_t codeSize = m_CodeHolder.codeSize();
     m_CodeHolder.copyFlattenedData(funcPtr, codeSize);
@@ -711,10 +712,9 @@ void CRSPRecompiler::SetupRspAssembler()
     m_CodeHolder.reset();
     m_CodeHolder.init(m_Environment);
     m_CodeHolder.setErrorHandler(this);
-    m_CodeHolder.setLogger(LogAsmCode ? nullptr : nullptr);
 
     m_Assembler = new RspAssembler(&m_CodeHolder, m_CodeLog);
-    m_Assembler->setLogger(LogAsmCode ? m_Assembler : nullptr);
+    m_CodeHolder.setLogger(LogAsmCode ? m_Assembler : nullptr);
 }
 
 void * CRSPRecompiler::GetAddressOf(int value, ...)

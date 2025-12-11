@@ -1,6 +1,7 @@
 #pragma once
 #if defined(__amd64__) || defined(_M_X64)
 
+#include <Project64-rsp-core/Recompiler/asmjit.h>
 #include <Project64-rsp-core/cpu/RSPInterpreterOps.h>
 
 class CRSPSystem;
@@ -175,6 +176,7 @@ public:
     void ExitCodeBlock(void);
 
 private:
+    void LoadVectorRegister(asmjit::x86::Xmm xmmReg, int32_t vectorReg, int32_t e);
     void Cheat_r4300iOpcode(RSPOp::Func FunctAddress, const char * FunctName);
 
     CRSPSystem & m_System;
@@ -185,6 +187,11 @@ private:
     RSPPIPELINE_STAGE & m_NextInstruction;
     CRSPRegisters & m_Reg;
     UWORD32 * m_GPR;
+    RSPVector * m_Vect;
+    RSPAccumulator & m_ACCUM;
+    RSPFlag &m_VCOL, &m_VCOH;
+    RSPFlag &m_VCCL, &m_VCCH;
+    RSPFlag & m_VCE;
     RspAssembler *& m_Assembler;
     bool m_DelayAffectBranch;
 };

@@ -230,8 +230,8 @@ private:
     uint32_t & m_CompilePC;
     UWORD32 * m_GPR;
     RSPAccumulator & m_ACCUM;
-    RSPFlag & m_VCOL, & m_VCOH;
-    RSPFlag & m_VCCL, & m_VCCH;
+    RSPFlag &m_VCOL, &m_VCOH;
+    RSPFlag &m_VCCL, &m_VCCH;
     RSPFlag & m_VCE;
     RSPVector * m_Vect;
 };

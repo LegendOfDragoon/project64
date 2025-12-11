@@ -129,9 +129,9 @@ public:
     uint16_t m_In;
     bool m_High;
 
-    RSPFlag VCOL, VCOH;
-    RSPFlag VCCL, VCCH;
-    RSPFlag VCE;
+    RSPFlag m_VCOL, m_VCOH;
+    RSPFlag m_VCCL, m_VCCH;
+    RSPFlag m_VCE;
 };
 
 #if defined(__i386__) || defined(_M_IX86)

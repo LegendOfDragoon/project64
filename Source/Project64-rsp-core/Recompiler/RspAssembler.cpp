@@ -9,11 +9,12 @@ RspAssembler::RspAssembler(asmjit::CodeHolder * CodeHolder, std::string & CodeLo
     asmjit::x86::Assembler(CodeHolder),
     m_CodeLog(CodeLog)
 {
-    setLogger(nullptr);
     setErrorHandler(this);
     addFlags(asmjit::FormatFlags::kHexOffsets);
     addFlags(asmjit::FormatFlags::kHexImms);
     addFlags(asmjit::FormatFlags::kExplainImms);
+    setIndentation(asmjit::FormatIndentationGroup::kCode, 2);
+    setIndentation(asmjit::FormatIndentationGroup::kComment, 2);
 }
 
 void RspAssembler::handleError(asmjit::Error /*err*/, const char * /*message*/, asmjit::BaseEmitter * /*origin*/)
@@ -23,8 +24,13 @@ void RspAssembler::handleError(asmjit::Error /*err*/, const char * /*message*/, 
 
 asmjit::Error RspAssembler::_log(const char * data, size_t size) noexcept
 {
-    stdstr AsmjitLog(std::string(data, size));
+    stdstr AsmjitLog(size == (size_t)-1 ? std::string(data) : std::string(data, size));
     AsmjitLog.Trim("\n");
+    if (AsmjitLog.empty())
+    {
+        return asmjit::kErrorOk;
+    }
+
     std::string::size_type Pos = AsmjitLog.find("0x");
     if (m_NumberSymbols.size() > 0 && Pos != std::string::npos)
     {
@@ -97,7 +103,7 @@ asmjit::Error RspAssembler::_log(const char * data, size_t size) noexcept
             }
         }
     }
-    m_CodeLog.append(stdstr_f("      %s\n", AsmjitLog.c_str()));
+    m_CodeLog.append(stdstr_f("  %s\n", AsmjitLog.c_str()));
     return asmjit::kErrorOk;
 }
 

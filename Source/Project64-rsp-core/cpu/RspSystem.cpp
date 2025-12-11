@@ -279,6 +279,15 @@ CRSPSystem * CRSPSystem::SyncSystem(void)
 void CRSPSystem::BasicSyncCheck(void)
 {
     bool SyncFailed = false;
+    RSPVector *Vect = m_Reg.m_Vect, *VectSync = m_SyncSystem->m_Reg.m_Vect;
+    for (int32_t i = 0; i < 32; i++)
+    {
+        if (Vect[i].u64(0) != VectSync[i].u64(0) || Vect[i].u64(1) != VectSync[i].u64(1))
+        {
+            SyncFailed = true;
+            break;
+        }
+    }
     if (memcmp(m_IMEM, m_SyncSystem->m_IMEM, 0x1000) != 0)
     {
         SyncFailed = true;
