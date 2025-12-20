@@ -592,6 +592,7 @@ asmjit::x86::Gp CX86RegInfo::Map_FPStatusReg()
         g_Notify->BreakPoint(__FILE__, __LINE__);
         return Reg;
     }
+    SetX86MapOrder(GetIndexFromX86Reg(Reg), 1);
     SetX86Mapped(GetIndexFromX86Reg(Reg), CX86RegInfo::FPStatusReg_Mapped);
     m_CodeBlock.Log("    regcache: allocate %s as FP Status Reg", CX86Ops::x86_Name(Reg));
     m_Assembler.MoveVariableToX86reg(Reg, &g_Reg->m_FPCR[31], "FPCR[31]");
