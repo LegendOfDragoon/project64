@@ -1,4 +1,6 @@
 #pragma once
+
+#if defined(__i386__) || defined(_M_IX86)
 #include "RSPOpcode.h"
 #include <stdint.h>
 #include <string>
@@ -79,3 +81,4 @@ private:
     mutable uint32_t m_SourceReg0;
     mutable uint32_t m_SourceReg1;
 };
+#endif

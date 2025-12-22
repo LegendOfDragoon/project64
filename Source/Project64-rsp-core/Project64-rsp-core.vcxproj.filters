@@ -39,9 +39,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cpu\RSPiInstruction.cpp">
-      <Filter>Source Files\cpu</Filter>
-    </ClCompile>
     <ClCompile Include="cpu\RspTypes.cpp">
       <Filter>Source Files\cpu</Filter>
     </ClCompile>
@@ -153,11 +150,14 @@
     <ClCompile Include="Recompiler\RspRecompilerOps-x64.cpp">
       <Filter>Source Files\Recompiler</Filter>
     </ClCompile>
+    <ClCompile Include="cpu\RSPInstruction-x86.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\RSPInstruction-x64.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cpu\RSPInstruction.h">
-      <Filter>Header Files\cpu</Filter>
-    </ClInclude>
     <ClInclude Include="cpu\RSPOpcode.h">
       <Filter>Header Files\cpu</Filter>
     </ClInclude>
@@ -236,9 +236,6 @@
     <ClInclude Include="Recompiler\RspRecompilerOps-x86.h">
       <Filter>Header Files\Recompiler</Filter>
     </ClInclude>
-    <ClInclude Include="Recompiler\RspRecompilerCPU-x86.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Recompiler\asmjit.h">
       <Filter>Header Files\Recompiler</Filter>
     </ClInclude>
@@ -253,6 +250,15 @@
     </ClInclude>
     <ClInclude Include="Recompiler\RspRecompilerOps-x64.h">
       <Filter>Header Files\Recompiler</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\RSPInstruction-x86.h">
+      <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="Recompiler\RspRecompilerCPU-x86.h">
+      <Filter>Header Files\Recompiler</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\RSPInstruction-x64.h">
+      <Filter>Header Files\cpu</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

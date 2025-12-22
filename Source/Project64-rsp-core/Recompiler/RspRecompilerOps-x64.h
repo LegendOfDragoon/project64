@@ -16,6 +16,14 @@ class CRSPRecompilerOps
         FunctionStackSize = 40,
     };
 
+    enum class AccumLocation
+    {
+        High,
+        Middle,
+        Low,
+        Entire,
+    };
+
 public:
     CRSPRecompilerOps(CRSPSystem & System, CRSPRecompiler & Recompiler);
 
@@ -176,8 +184,10 @@ public:
     void ExitCodeBlock(void);
 
 private:
-    void LoadVectorRegister(asmjit::x86::Xmm xmmReg, int32_t vectorReg, int32_t e);
+    void LoadVectorRegister(asmjit::x86::Xmm xmmReg, uint8_t vectorReg, uint8_t e);
     void Cheat_r4300iOpcode(RSPOp::Func FunctAddress, const char * FunctName);
+    bool WriteToVectorDest(uint32_t DestReg, uint32_t PC);
+    bool WriteToAccum(AccumLocation Location, uint32_t PC);
 
     CRSPSystem & m_System;
     CRSPRecompiler & m_Recompiler;

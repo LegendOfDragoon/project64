@@ -2446,7 +2446,7 @@ void CRSPRecompilerOps::Cop2_MF(void)
     }
 
 #ifndef Compile_Cop2
-    Cheat_r4300iOpcode(&RSPOp::Cop2_MF, "&RSPOp::Cop2_MF");
+    Cheat_r4300iOpcode(RSP_Cop2_MF, "RSP_Cop2_MF");
 #else
     char Reg[256];
     uint8_t element = (uint8_t)(m_OpCode.sa >> 1);

@@ -4,7 +4,7 @@
 #include "X86.h"
 #include <Project64-rsp-core/Recompiler/RspRecompilerOps-x86.h>
 #include <Project64-rsp-core/cpu/RSPCpu.h>
-#include <Project64-rsp-core/cpu/RSPInstruction.h>
+#include <Project64-rsp-core/cpu/RSPInstruction-x86.h>
 #include <Project64-rsp-core/cpu/RSPRegisters.h>
 #include <Project64-rsp-core/cpu/RspLog.h>
 #include <Project64-rsp-core/cpu/RspMemory.h>

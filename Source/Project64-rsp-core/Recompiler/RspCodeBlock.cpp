@@ -55,6 +55,12 @@ uint32_t RspCodeBlock::GetStartAddress() const
     return m_StartAddress;
 }
 
+size_t RspCodeBlock::InstructionIndex(uint32_t pc) const
+{
+    InstructionIndexMap::const_iterator it = m_InstructionIndex.find(pc);
+    return (it != m_InstructionIndex.end()) ? it->second : m_InstructionIndex.size();
+}
+
 void RspCodeBlock::SetCompiledLocation(void * CompiledLoction)
 {
     m_CompiledLoction = CompiledLoction;
@@ -268,5 +274,9 @@ void RspCodeBlock::Analyze(void)
             }
             m_Functions[*itr] = std::move(FunctionCall);
         }
+    }
+    for (size_t i = 0, n = m_Instructions.size(); i < n; i++)
+    {
+        m_InstructionIndex[m_Instructions[i].Address()] = i;
     }
 }

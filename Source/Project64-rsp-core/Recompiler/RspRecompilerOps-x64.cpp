@@ -5,7 +5,7 @@
 #include <Project64-rsp-core/Recompiler/RspAssembler.h>
 #include <Project64-rsp-core/Recompiler/RspCodeBlock.h>
 #include <Project64-rsp-core/Recompiler/RspProfiling.h>
-#include <Project64-rsp-core/cpu/RSPInstruction.h>
+#include <Project64-rsp-core/cpu/RSPInstruction-x64.h>
 #include <Project64-rsp-core/cpu/RspSystem.h>
 #include <Settings/Settings.h>
 
@@ -931,23 +931,33 @@ void CRSPRecompilerOps::Vector_VMADH(void)
 
 void CRSPRecompilerOps::Vector_VADD(void)
 {
-    m_Assembler->MoveConstToVariable(m_System.m_SP_PC_REG, "RSP PC", (m_CompilePC & 0xFFF));
-    m_Assembler->MoveConstToVariable(&m_System.m_OpCode.Value, "m_OpCode.Value", m_OpCode.Value);
+    bool writeToDest = WriteToVectorDest(m_OpCode.sa, m_CompilePC);
+    bool writeToAccum = WriteToAccum(AccumLocation::Low, m_CompilePC);
+
     m_Assembler->comment(stdstr_f("%X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str()).c_str());
-    m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_Vect[m_OpCode.vs].u64(0));
-    m_Assembler->movdqa(asmjit::x86::xmm0, asmjit::x86::ptr(asmjit::x86::r11));
-    LoadVectorRegister(asmjit::x86::xmm1, m_OpCode.vt, m_OpCode.e);
-    m_Assembler->mov(asmjit::x86::r11, (uint64_t)m_VCOL.Value());
-    m_Assembler->movdqa(asmjit::x86::xmm2, asmjit::x86::ptr(asmjit::x86::r11));
-    m_Assembler->movdqa(asmjit::x86::xmm3, asmjit::x86::xmm0);
-    m_Assembler->paddw(asmjit::x86::xmm3, asmjit::x86::xmm1);
-    m_Assembler->paddw(asmjit::x86::xmm3, asmjit::x86::xmm2);
-    m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_ACCUM.Low(0));
-    m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r11), asmjit::x86::xmm3);
-    m_Assembler->paddsw(asmjit::x86::xmm0, asmjit::x86::xmm1);
-    m_Assembler->paddsw(asmjit::x86::xmm0, asmjit::x86::xmm2);
-    m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_Vect[m_OpCode.vd].u64(0));
-    m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r11), asmjit::x86::xmm0);
+    if (writeToAccum || writeToDest)
+    {
+        m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_Vect[m_OpCode.vs].u64(0));
+        m_Assembler->movdqa(asmjit::x86::xmm0, asmjit::x86::ptr(asmjit::x86::r11));
+        LoadVectorRegister(asmjit::x86::xmm1, m_OpCode.vt, m_OpCode.e);
+        m_Assembler->mov(asmjit::x86::r11, (uint64_t)m_VCOL.Value());
+        m_Assembler->movdqa(asmjit::x86::xmm2, asmjit::x86::ptr(asmjit::x86::r11));
+    }
+    if (writeToAccum)
+    {
+        m_Assembler->movdqa(asmjit::x86::xmm3, asmjit::x86::xmm0);
+        m_Assembler->paddw(asmjit::x86::xmm3, asmjit::x86::xmm1);
+        m_Assembler->paddw(asmjit::x86::xmm3, asmjit::x86::xmm2);
+        m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_ACCUM.Low(0));
+        m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r11), asmjit::x86::xmm3);
+    }
+    if (writeToDest)
+    {
+        m_Assembler->paddsw(asmjit::x86::xmm0, asmjit::x86::xmm1);
+        m_Assembler->paddsw(asmjit::x86::xmm0, asmjit::x86::xmm2);
+        m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_Vect[m_OpCode.vd].u64(0));
+        m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r11), asmjit::x86::xmm0);
+    }
     m_Assembler->pxor(asmjit::x86::xmm0, asmjit::x86::xmm0);
     m_Assembler->mov(asmjit::x86::r11, (uint64_t)m_VCOL.Value());
     m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r11), asmjit::x86::xmm0);
@@ -1245,7 +1255,7 @@ void CRSPRecompilerOps::ExitCodeBlock(void)
     m_Assembler->ret();
 }
 
-void CRSPRecompilerOps::LoadVectorRegister(asmjit::x86::Xmm xmmReg, int32_t vectorReg, int32_t e)
+void CRSPRecompilerOps::LoadVectorRegister(asmjit::x86::Xmm xmmReg, uint8_t vectorReg, uint8_t e)
 {
     if (e < 8)
     {
@@ -1290,6 +1300,98 @@ void CRSPRecompilerOps::LoadVectorRegister(asmjit::x86::Xmm xmmReg, int32_t vect
         m_Assembler->pshuflw(xmmReg, xmmReg, _MM_SHUFFLE(0, 0, 0, 0));
         m_Assembler->pshufd(xmmReg, xmmReg, _MM_SHUFFLE(0, 0, 0, 0));
     }
+}
+
+bool CRSPRecompilerOps::WriteToVectorDest(uint32_t DestReg, uint32_t PC)
+{
+    const RSPInstructions & instructions = m_CurrentBlock->GetInstructions();
+    for (size_t i = m_CurrentBlock->InstructionIndex(PC) + 1, n = instructions.size(); i < n; i++)
+    {
+        const RSPInstruction & instruction = instructions[i];
+        if (instruction.IsJump() || instruction.isBranch())
+        {
+            n = i + 1;
+        }
+        if (instruction.isVectorOp())
+        {
+            if (instruction.SourceReg0() == DestReg || instruction.SourceReg1() == DestReg)
+            {
+                return true;
+            }
+            if (instruction.DestReg() == DestReg)
+            {
+                return false;
+            }
+        }
+        if ((instruction.isVectorStoreOp() && instruction.SourceReg0() == DestReg) ||
+            (instruction.isMfCop2() && instruction.SourceReg0() == DestReg))
+        {
+            return true;
+        }
+        if (instruction.isMtCop2() && instruction.DestReg() == DestReg)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool CRSPRecompilerOps::WriteToAccum(AccumLocation Location, uint32_t PC)
+{
+    const RSPInstructions & instructions = m_CurrentBlock->GetInstructions();
+    for (size_t i = m_CurrentBlock->InstructionIndex(PC) + 1, n = instructions.size(); i < n; i++)
+    {
+        const RSPInstruction & instruction = instructions[i];
+        if (instruction.IsJump() || instruction.isBranch())
+        {
+            n = i + 1;
+        }
+
+        switch (Location)
+        {
+        case AccumLocation::Low:
+            if (instruction.ReadAccumLow())
+            {
+                return true;
+            }
+            if (instruction.SetAccumLow())
+            {
+                return false;
+            }
+            break;
+        case AccumLocation::Middle:
+            if (instruction.ReadAccumMid())
+            {
+                return true;
+            }
+            if (instruction.SetAccumMid())
+            {
+                return false;
+            }
+            break;
+        case AccumLocation::High:
+            if (instruction.ReadAccumHigh())
+            {
+                return true;
+            }
+            if (instruction.SetAccumHigh())
+            {
+                return false;
+            }
+            break;
+        case AccumLocation::Entire:
+            if (instruction.ReadAccumLow() || instruction.ReadAccumMid() || instruction.ReadAccumHigh())
+            {
+                return true;
+            }
+            if (instruction.SetAccumLow() && instruction.SetAccumMid() && instruction.SetAccumHigh())
+            {
+                return false;
+            }
+            break;
+        }
+    }
+    return true;
 }
 
 #endif

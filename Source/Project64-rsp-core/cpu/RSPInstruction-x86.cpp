@@ -1,4 +1,6 @@
-#include "RSPInstruction.h"
+#if defined(__i386__) || defined(_M_IX86)
+
+#include "RSPInstruction-x86.h"
 #include "RSPRegisters.h"
 #include <Common/StdString.h>
 #include <Project64-rsp-core/RSPInfo.h>
@@ -1325,3 +1327,5 @@ const char * RSPInstruction::ElementSpecifier(uint32_t Element)
     }
     return "Unknown Element";
 }
+
+#endif
