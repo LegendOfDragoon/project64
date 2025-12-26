@@ -937,32 +937,26 @@ void CRSPRecompilerOps::Vector_VADD(void)
     m_Assembler->comment(stdstr_f("%X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str()).c_str());
     if (writeToAccum || writeToDest)
     {
-        m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_Vect[m_OpCode.vs].u64(0));
-        m_Assembler->movdqa(asmjit::x86::xmm0, asmjit::x86::ptr(asmjit::x86::r11));
+        m_Assembler->movdqa(asmjit::x86::xmm0, asmjit::x86::ptr(asmjit::x86::r14, (uint32_t)((uint8_t *)&m_Vect[m_OpCode.vs] - (uint8_t *)&m_Reg)));
         LoadVectorRegister(asmjit::x86::xmm1, m_OpCode.vt, m_OpCode.e);
-        m_Assembler->mov(asmjit::x86::r11, (uint64_t)m_VCOL.Value());
-        m_Assembler->movdqa(asmjit::x86::xmm2, asmjit::x86::ptr(asmjit::x86::r11));
+        m_Assembler->movdqa(asmjit::x86::xmm2, asmjit::x86::ptr(asmjit::x86::r14, (uint32_t)(m_VCOL.Value() - (uint8_t *)&m_Reg)));
     }
     if (writeToAccum)
     {
         m_Assembler->movdqa(asmjit::x86::xmm3, asmjit::x86::xmm0);
         m_Assembler->paddw(asmjit::x86::xmm3, asmjit::x86::xmm1);
         m_Assembler->paddw(asmjit::x86::xmm3, asmjit::x86::xmm2);
-        m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_ACCUM.Low(0));
-        m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r11), asmjit::x86::xmm3);
+        m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, (uint32_t)((uint8_t *)&m_ACCUM.Low(0) - (uint8_t *)&m_Reg)), asmjit::x86::xmm3);
     }
     if (writeToDest)
     {
         m_Assembler->paddsw(asmjit::x86::xmm0, asmjit::x86::xmm1);
         m_Assembler->paddsw(asmjit::x86::xmm0, asmjit::x86::xmm2);
-        m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_Vect[m_OpCode.vd].u64(0));
-        m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r11), asmjit::x86::xmm0);
+        m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, (uint32_t)((uint8_t *)&m_Vect[m_OpCode.vd].u64(0) - (uint8_t *)&m_Reg)), asmjit::x86::xmm0);
     }
     m_Assembler->pxor(asmjit::x86::xmm0, asmjit::x86::xmm0);
-    m_Assembler->mov(asmjit::x86::r11, (uint64_t)m_VCOL.Value());
-    m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r11), asmjit::x86::xmm0);
-    m_Assembler->mov(asmjit::x86::r11, (uint64_t)m_VCOH.Value());
-    m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r11), asmjit::x86::xmm0);
+    m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, (uint32_t)(m_VCOL.Value() - (uint8_t *)&m_Reg)), asmjit::x86::xmm0);
+    m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, (uint32_t)(m_VCOH.Value() - (uint8_t *)&m_Reg)), asmjit::x86::xmm0);
 }
 
 void CRSPRecompilerOps::Vector_VSUB(void)
@@ -1237,12 +1231,14 @@ void CRSPRecompilerOps::UnknownOpcode(void)
 
 void CRSPRecompilerOps::EnterCodeBlock(void)
 {
+    m_Assembler->push(asmjit::x86::r14);
     m_Assembler->sub(asmjit::x86::rsp, FunctionStackSize);
     if (Profiling && m_CurrentBlock->CodeType() == RspCodeType_TASK)
     {
         m_Assembler->mov(asmjit::x86::rcx, asmjit::imm((uintptr_t)m_CompilePC));
         m_Assembler->CallFunc(AddressOf(&StartTimer), "StartTimer");
     }
+    m_Assembler->mov(asmjit::x86::r14, (uint64_t)&m_Reg);
 }
 
 void CRSPRecompilerOps::ExitCodeBlock(void)
@@ -1252,6 +1248,7 @@ void CRSPRecompilerOps::ExitCodeBlock(void)
         m_Assembler->CallFunc(AddressOf(&StopTimer), "StopTimer");
     }
     m_Assembler->add(asmjit::x86::rsp, FunctionStackSize);
+    m_Assembler->pop(asmjit::x86::r14);
     m_Assembler->ret();
 }
 
@@ -1259,8 +1256,7 @@ void CRSPRecompilerOps::LoadVectorRegister(asmjit::x86::Xmm xmmReg, uint8_t vect
 {
     if (e < 8)
     {
-        m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_Vect[vectorReg].u64(0));
-        m_Assembler->movdqa(xmmReg, asmjit::x86::ptr(asmjit::x86::r11));
+        m_Assembler->movdqa(xmmReg, asmjit::x86::ptr(asmjit::x86::r14, (uint32_t)((uint8_t *)&m_Vect[vectorReg].u64(0) - (uint8_t *)&m_Reg)));
         if (e > 1)
         {
             switch (e)
@@ -1294,8 +1290,7 @@ void CRSPRecompilerOps::LoadVectorRegister(asmjit::x86::Xmm xmmReg, uint8_t vect
     }
     else
     {
-        m_Assembler->mov(asmjit::x86::r11, (uint64_t)&m_Vect[vectorReg].s16(e));
-        m_Assembler->movzx(asmjit::x86::eax, asmjit::x86::word_ptr(asmjit::x86::r11));
+        m_Assembler->movzx(asmjit::x86::eax, asmjit::x86::word_ptr(asmjit::x86::r14, (uint32_t)((uint8_t *)&m_Vect[vectorReg].s16(e) - (uint8_t *)&m_Reg)));
         m_Assembler->movd(xmmReg, asmjit::x86::eax);
         m_Assembler->pshuflw(xmmReg, xmmReg, _MM_SHUFFLE(0, 0, 0, 0));
         m_Assembler->pshufd(xmmReg, xmmReg, _MM_SHUFFLE(0, 0, 0, 0));
