@@ -509,6 +509,7 @@ void CRSPRecompiler::CompileCodeBlock(RspCodeBlock & block)
         bool JumpTarget = false;
         if (labelItr != m_BranchTargets.end())
         {
+            m_RegState.WriteBackRegisters();
             if (m_NextInstruction == RSPPIPELINE_NORMAL)
             {
                 m_Assembler->bind(labelItr->second);

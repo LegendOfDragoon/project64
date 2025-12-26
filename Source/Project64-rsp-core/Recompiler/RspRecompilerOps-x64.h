@@ -1,6 +1,7 @@
 #pragma once
 #if defined(__amd64__) || defined(_M_X64)
 
+#include "RspRegState.h"
 #include <Project64-rsp-core/Recompiler/asmjit.h>
 #include <Project64-rsp-core/cpu/RSPInterpreterOps.h>
 
@@ -188,6 +189,9 @@ private:
     void Cheat_r4300iOpcode(RSPOp::Func FunctAddress, const char * FunctName);
     bool WriteToVectorDest(uint32_t DestReg, uint32_t PC);
     bool WriteToAccum(AccumLocation Location, uint32_t PC);
+    uint32_t VectorOffset(uint8_t vectorReg) const;
+    uint32_t AccumOffset(AccumLocation location) const;
+    uint32_t FlagOffset(RspFlags flag) const;
 
     CRSPSystem & m_System;
     CRSPRecompiler & m_Recompiler;
@@ -203,6 +207,7 @@ private:
     RSPFlag &m_VCCL, &m_VCCH;
     RSPFlag & m_VCE;
     RspAssembler *& m_Assembler;
+    CRspRegState & m_RegState;
     bool m_DelayAffectBranch;
 };
 

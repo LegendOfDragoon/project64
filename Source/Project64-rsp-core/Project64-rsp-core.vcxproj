@@ -75,6 +75,7 @@
     <ClCompile Include="Recompiler\RspRecompilerOps-x64.cpp" />
     <ClCompile Include="Recompiler\RspRecompilerOps-x86.cpp" />
     <ClCompile Include="Recompiler\RspRecompilerSections.cpp" />
+    <ClCompile Include="Recompiler\RspRegState.cpp" />
     <ClCompile Include="Recompiler\Sse.cpp" />
     <ClCompile Include="Recompiler\X86.cpp" />
     <ClCompile Include="RSPDebugger.cpp" />
@@ -111,6 +112,7 @@
     <ClInclude Include="Recompiler\RspRecompilerCPU-x86.h" />
     <ClInclude Include="Recompiler\RspRecompilerOps-x64.h" />
     <ClInclude Include="Recompiler\RspRecompilerOps-x86.h" />
+    <ClInclude Include="Recompiler\RspRegState.h" />
     <ClInclude Include="Recompiler\X86.h" />
     <ClInclude Include="RSPDebugger.h" />
     <ClInclude Include="RSPInfo.h" />

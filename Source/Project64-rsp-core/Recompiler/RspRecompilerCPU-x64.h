@@ -57,6 +57,7 @@ private:
     asmjit::CodeHolder m_CodeHolder;
     RspAssembler * m_Assembler;
     BranchTargets m_BranchTargets;
+    CRspRegState m_RegState;
 };
 
 #define AddressOf(Addr) CRSPRecompiler::GetAddressOf(5, (Addr))

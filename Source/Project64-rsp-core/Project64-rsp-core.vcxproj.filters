@@ -156,6 +156,9 @@
     <ClCompile Include="cpu\RSPInstruction-x64.cpp">
       <Filter>Source Files\cpu</Filter>
     </ClCompile>
+    <ClCompile Include="Recompiler\RspRegState.cpp">
+      <Filter>Source Files\Recompiler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cpu\RSPOpcode.h">
@@ -259,6 +262,9 @@
     </ClInclude>
     <ClInclude Include="cpu\RSPInstruction-x64.h">
       <Filter>Header Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="Recompiler\RspRegState.h">
+      <Filter>Header Files\Recompiler</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
