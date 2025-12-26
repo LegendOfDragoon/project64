@@ -186,7 +186,7 @@ public:
 
 private:
     void LoadVectorRegister(asmjit::x86::Xmm xmmReg, uint8_t vectorReg, uint8_t e);
-    void Cheat_r4300iOpcode(RSPOp::Func FunctAddress, const char * FunctName);
+    void Cheat_r4300iOpcode(RSPOp::Func FunctAddress, const char * FunctName, bool CommentOp = true);
     bool WriteToVectorDest(uint32_t DestReg, uint32_t PC);
     bool WriteToAccum(AccumLocation Location, uint32_t PC);
     uint32_t VectorOffset(uint8_t vectorReg) const;
@@ -199,6 +199,7 @@ private:
     const uint32_t & m_CompilePC;
     const RspCodeBlock *& m_CurrentBlock;
     RSPPIPELINE_STAGE & m_NextInstruction;
+    uint8_t *& m_DMEM;
     CRSPRegisters & m_Reg;
     UWORD32 * m_GPR;
     RSPVector * m_Vect;

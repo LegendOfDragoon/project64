@@ -8,6 +8,7 @@
 #include <Project64-rsp-core/cpu/RSPInstruction-x64.h>
 #include <Project64-rsp-core/cpu/RspSystem.h>
 #include <Settings/Settings.h>
+#include <algorithm>
 
 extern p_Recompfunc RSP_Recomp_RegImm[32];
 extern p_Recompfunc RSP_Recomp_Special[64];
@@ -19,6 +20,18 @@ extern p_Recompfunc RSP_Recomp_Sc2[32];
 
 uint32_t BranchCompare = 0;
 
+namespace
+{
+    // clang-format off
+    static const alignas(16) uint8_t g_LQVByteSwapMask[16] = {
+        12, 13, 14, 15,
+        8, 9, 10, 11,
+        4, 5, 6, 7,
+        0, 1, 2, 3,
+    };
+    // clang-format on}
+}
+
 CRSPRecompilerOps::CRSPRecompilerOps(CRSPSystem & System, CRSPRecompiler & Recompiler) :
     m_System(System),
     m_Recompiler(Recompiler),
@@ -26,6 +39,7 @@ CRSPRecompilerOps::CRSPRecompilerOps(CRSPSystem & System, CRSPRecompiler & Recom
     m_CompilePC(Recompiler.m_CompilePC),
     m_CurrentBlock(Recompiler.m_CurrentBlock),
     m_NextInstruction(Recompiler.m_NextInstruction),
+    m_DMEM(System.m_DMEM),
     m_Reg(System.m_Reg),
     m_GPR(System.m_Reg.m_GPR),
     m_Vect(System.m_Reg.m_Vect),
@@ -41,9 +55,12 @@ CRSPRecompilerOps::CRSPRecompilerOps(CRSPSystem & System, CRSPRecompiler & Recom
 {
 }
 
-void CRSPRecompilerOps::Cheat_r4300iOpcode(RSPOp::Func FunctAddress, const char * FunctName)
+void CRSPRecompilerOps::Cheat_r4300iOpcode(RSPOp::Func FunctAddress, const char * FunctName, bool CommentOp)
 {
-    m_Assembler->comment(stdstr_f("%X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str()).c_str());
+    if (CommentOp)
+    {
+        m_Assembler->comment(stdstr_f("%X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str()).c_str());
+    }
     if (SyncCPU)
     {
         m_Assembler->MoveConstToVariable(m_System.m_SP_PC_REG, "RSP PC", m_CompilePC);
@@ -1145,7 +1162,30 @@ void CRSPRecompilerOps::Opcode_LDV(void)
 
 void CRSPRecompilerOps::Opcode_LQV(void)
 {
-    Cheat_r4300iOpcode(&RSPOp::LQV, "RSPOp::LQV");
+    m_Assembler->comment(stdstr_f("%X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str()).c_str());
+
+    if (m_RegState.IsGprConst(m_OpCode.base))
+    {
+        uint32_t Address = (uint32_t)(m_RegState.GetGprConstValue(m_OpCode.base) + (m_OpCode.voffset << 4)) & 0xFFF;
+        uint8_t Length = std::min((uint8_t)(((Address + 0x10) & ~0xF) - Address), (uint8_t)(16 - m_OpCode.del));
+        if (Length == 16 && Address % 16 == 0 && m_OpCode.del == 0)
+        {
+            m_Assembler->mov(asmjit::x86::r10, (uint64_t)m_DMEM);
+            m_Assembler->movdqu(asmjit::x86::xmm0, asmjit::x86::ptr(asmjit::x86::r10, Address));
+            m_Assembler->mov(asmjit::x86::r11, (uint64_t)&g_LQVByteSwapMask);
+            m_Assembler->movdqa(asmjit::x86::xmm1, asmjit::x86::ptr(asmjit::x86::r11));
+            m_Assembler->pshufb(asmjit::x86::xmm0, asmjit::x86::xmm1);
+            m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, VectorOffset(m_OpCode.vt)), asmjit::x86::xmm0);
+        }
+        else
+        {
+            Cheat_r4300iOpcode(&RSPOp::LQV, "RSPOp::LQV", false);
+        }
+    }
+    else
+    {
+        Cheat_r4300iOpcode(&RSPOp::LQV, "RSPOp::LQV", false);
+    }
 }
 
 void CRSPRecompilerOps::Opcode_LRV(void)
