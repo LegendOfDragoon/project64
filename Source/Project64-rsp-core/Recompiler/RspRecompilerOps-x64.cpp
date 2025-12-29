@@ -20,18 +20,6 @@ extern p_Recompfunc RSP_Recomp_Sc2[32];
 
 uint32_t BranchCompare = 0;
 
-namespace
-{
-    // clang-format off
-    static const alignas(16) uint8_t g_LQVByteSwapMask[16] = {
-        12, 13, 14, 15,
-        8, 9, 10, 11,
-        4, 5, 6, 7,
-        0, 1, 2, 3,
-    };
-    // clang-format on}
-}
-
 CRSPRecompilerOps::CRSPRecompilerOps(CRSPSystem & System, CRSPRecompiler & Recompiler) :
     m_System(System),
     m_Recompiler(Recompiler),
@@ -1172,9 +1160,7 @@ void CRSPRecompilerOps::Opcode_LQV(void)
         {
             m_Assembler->mov(asmjit::x86::r10, (uint64_t)m_DMEM);
             m_Assembler->movdqu(asmjit::x86::xmm0, asmjit::x86::ptr(asmjit::x86::r10, Address));
-            m_Assembler->mov(asmjit::x86::r11, (uint64_t)&g_LQVByteSwapMask);
-            m_Assembler->movdqa(asmjit::x86::xmm1, asmjit::x86::ptr(asmjit::x86::r11));
-            m_Assembler->pshufb(asmjit::x86::xmm0, asmjit::x86::xmm1);
+            m_Assembler->pshufd(asmjit::x86::xmm0, asmjit::x86::xmm0, 0x1B);
             m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, VectorOffset(m_OpCode.vt)), asmjit::x86::xmm0);
         }
         else
