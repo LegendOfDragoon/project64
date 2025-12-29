@@ -532,7 +532,7 @@ void SetupRSP_RegistersMain(HWND hDlg)
 #ifdef _M_IX86
     RefreshProc = (WNDPROC)SetWindowLong(hStatic, GWL_WNDPROC, (long)RefreshRSP_RegProc);
 #else
-    DebugBreak();
+    RefreshProc = (WNDPROC)SetWindowLongPtr(hStatic, GWLP_WNDPROC, (LONG_PTR)RefreshRSP_RegProc);
 #endif
 
     UpdateRSPRegistersScreen();
