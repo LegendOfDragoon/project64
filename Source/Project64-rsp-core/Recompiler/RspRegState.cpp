@@ -30,6 +30,26 @@ uint32_t CRspRegState::GetGprConstValue(uint8_t gprReg) const
     return m_GprConstValue[gprReg];
 }
 
+void CRspRegState::SetGprConst(uint8_t gprReg, uint32_t value)
+{
+    if (gprReg == 0)
+    {
+        return;
+    }
+    m_GprIsConst[gprReg] = true;
+    m_GprConstValue[gprReg] = value;
+}
+
+void CRspRegState::SetGprUnknown(uint8_t gprReg)
+{
+    if (gprReg == 0)
+    {
+        return;
+    }
+    m_GprIsConst[gprReg] = false;
+    m_GprConstValue[gprReg] = 0;
+}
+
 bool CRspRegState::IsFlagZero(RspFlags flag) const
 {
     return m_FlagIsZero[(size_t)flag];

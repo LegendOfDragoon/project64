@@ -189,6 +189,7 @@ private:
     void Cheat_r4300iOpcode(RSPOp::Func FunctAddress, const char * FunctName, bool CommentOp = true);
     bool WriteToVectorDest(uint32_t DestReg, uint32_t PC);
     bool WriteToAccum(AccumLocation Location, uint32_t PC);
+    uint32_t GprOffset(uint8_t gpReg) const;
     uint32_t VectorOffset(uint8_t vectorReg) const;
     uint32_t AccumOffset(AccumLocation location) const;
     uint32_t FlagOffset(RspFlags flag) const;

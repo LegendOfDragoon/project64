@@ -19,6 +19,8 @@ public:
 
     bool IsGprConst(uint8_t gprReg) const;
     uint32_t GetGprConstValue(uint8_t gprReg) const;
+    void SetGprConst(uint8_t gprReg, uint32_t value);
+    void SetGprUnknown(uint8_t gprReg);
 
     bool IsFlagZero(RspFlags flag) const;
     void SetFlagZero(RspFlags flag);

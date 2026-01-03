@@ -540,7 +540,28 @@ void CRSPRecompilerOps::BGTZ(void)
 
 void CRSPRecompilerOps::ADDI(void)
 {
-    Cheat_r4300iOpcode(&RSPOp::ADDI, "RSPOp::ADDI");
+    m_Assembler->comment(stdstr_f("%X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str()).c_str());
+    if (m_OpCode.rt == 0)
+    {
+        return;
+    }
+    if (m_RegState.IsGprConst(m_OpCode.rs))
+    {
+        uint32_t result = m_RegState.GetGprConstValue(m_OpCode.rs) + (int16_t)m_OpCode.immediate;
+        m_Assembler->mov(asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rt)), result);
+        m_RegState.SetGprConst(m_OpCode.rt, result);
+    }
+    else
+    {
+        m_Assembler->mov(asmjit::x86::eax, asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rs)));
+
+        if (m_OpCode.immediate != 0)
+        {
+            m_Assembler->add(asmjit::x86::eax, (int32_t)((int16_t)m_OpCode.immediate));
+        }
+        m_Assembler->mov(asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rt)), asmjit::x86::eax);
+        m_RegState.SetGprUnknown(m_OpCode.rt);
+    }
 }
 
 void CRSPRecompilerOps::ADDIU(void)
@@ -1443,6 +1464,11 @@ bool CRSPRecompilerOps::WriteToAccum(AccumLocation Location, uint32_t PC)
         }
     }
     return true;
+}
+
+uint32_t CRSPRecompilerOps::GprOffset(uint8_t gpReg) const
+{
+    return (uint32_t)((uint8_t *)&m_GPR[gpReg] - (uint8_t *)&m_Reg);
 }
 
 uint32_t CRSPRecompilerOps::VectorOffset(uint8_t vectorReg) const
