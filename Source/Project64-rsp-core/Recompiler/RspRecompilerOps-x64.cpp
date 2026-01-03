@@ -1161,7 +1161,21 @@ void CRSPRecompilerOps::Vector_VMRG(void)
 
 void CRSPRecompilerOps::Vector_VAND(void)
 {
-    Cheat_r4300iOpcode(&RSPOp::Vector_VAND, "RSPOp::Vector_VAND");
+    m_Assembler->comment(stdstr_f("%X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str()).c_str());
+    bool writeToAccum = WriteToAccum(AccumLocation::Low, m_CompilePC);
+    bool writeToDest = WriteToVectorDest(m_OpCode.vd, m_CompilePC);
+
+    asmjit::x86::Xmm vs, vte;
+    if (writeToAccum || writeToDest)
+    {
+        vte = m_RegState.MapXmmTemp(true, m_OpCode.vt, m_OpCode.e);
+        vs = writeToDest ? m_RegState.MapXmmReg(m_OpCode.vd, m_OpCode.vs) : m_RegState.MapXmmTemp(true, m_OpCode.vs);
+        m_Assembler->pand(vs, vte);
+    }
+    if (writeToAccum)
+    {
+        m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, AccumOffset(AccumLocation::Low)), vs);
+    }
 }
 
 void CRSPRecompilerOps::Vector_VNAND(void)
