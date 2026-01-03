@@ -693,17 +693,64 @@ void CRSPRecompilerOps::SC2(void)
 
 void CRSPRecompilerOps::Special_SLL(void)
 {
+    m_Assembler->comment(stdstr_f("%X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str()).c_str());
     if (m_OpCode.rd == 0)
     {
-        m_Recompiler.Log("  %X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str());
         return;
     }
-    Cheat_r4300iOpcode(&RSPOp::Special_SLL, "RSPOp::Special_SLL");
+    if (m_RegState.IsGprConst(m_OpCode.rt))
+    {
+        uint32_t result = m_RegState.GetGprConstValue(m_OpCode.rt) << m_OpCode.sa;
+        m_Assembler->mov(asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rd)), result);
+        m_RegState.SetGprConst(m_OpCode.rd, result);
+    }
+    else
+    {
+        if (m_OpCode.sa == 0)
+        {
+            m_Assembler->mov(asmjit::x86::eax, asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rt)));
+            m_Assembler->mov(asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rd)), asmjit::x86::eax);
+        }
+        else
+        {
+            m_Assembler->mov(asmjit::x86::eax, asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rt)));
+            m_Assembler->shl(asmjit::x86::eax, m_OpCode.sa);
+            m_Assembler->mov(asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rd)), asmjit::x86::eax);
+        }
+        m_RegState.SetGprUnknown(m_OpCode.rd);
+    }
 }
 
 void CRSPRecompilerOps::Special_SRL(void)
 {
-    Cheat_r4300iOpcode(&RSPOp::Special_SRL, "RSPOp::Special_SRL");
+    m_Assembler->comment(stdstr_f("%X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str()).c_str());
+
+    if (m_OpCode.rd == 0)
+    {
+        return;
+    }
+
+    if (m_RegState.IsGprConst(m_OpCode.rt))
+    {
+        uint32_t result = m_RegState.GetGprConstValue(m_OpCode.rt) >> m_OpCode.sa;
+        m_Assembler->mov(asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rd)), result);
+        m_RegState.SetGprConst(m_OpCode.rd, result);
+    }
+    else
+    {
+        if (m_OpCode.sa == 0)
+        {
+            m_Assembler->mov(asmjit::x86::eax, asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rt)));
+            m_Assembler->mov(asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rd)), asmjit::x86::eax);
+        }
+        else
+        {
+            m_Assembler->mov(asmjit::x86::eax, asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rt)));
+            m_Assembler->shr(asmjit::x86::eax, m_OpCode.sa);
+            m_Assembler->mov(asmjit::x86::dword_ptr(asmjit::x86::r14, GprOffset(m_OpCode.rd)), asmjit::x86::eax);
+        }
+        m_RegState.SetGprUnknown(m_OpCode.rd);
+    }
 }
 
 void CRSPRecompilerOps::Special_SRA(void)
