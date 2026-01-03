@@ -12,6 +12,8 @@ class RspCodeBlock;
 
 class CRSPRecompilerOps
 {
+    friend CRspRegState;
+
     enum
     {
         FunctionStackSize = 32,

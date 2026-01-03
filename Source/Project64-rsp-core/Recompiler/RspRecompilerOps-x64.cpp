@@ -1038,50 +1038,57 @@ void CRSPRecompilerOps::Vector_VMADH(void)
 
 void CRSPRecompilerOps::Vector_VADD(void)
 {
-    bool writeToDest = WriteToVectorDest(m_OpCode.sa, m_CompilePC);
+    bool writeToDest = WriteToVectorDest(m_OpCode.vd, m_CompilePC);
     bool writeToAccum = WriteToAccum(AccumLocation::Low, m_CompilePC);
 
     m_Assembler->comment(stdstr_f("%X %s", m_CompilePC, RSPInstruction(m_CompilePC, m_OpCode.Value).NameAndParam().c_str()).c_str());
+    asmjit::x86::Xmm vs, vte, vcol;
     if (writeToAccum || writeToDest)
     {
-        m_Assembler->movdqa(asmjit::x86::xmm0, asmjit::x86::ptr(asmjit::x86::r14, VectorOffset(m_OpCode.vs)));
-        LoadVectorRegister(asmjit::x86::xmm1, m_OpCode.vt, m_OpCode.e);
+        vte = m_RegState.MapXmmTemp(true, m_OpCode.vt, m_OpCode.e);
+        vs = writeToDest ? m_RegState.MapXmmReg(m_OpCode.vd, m_OpCode.vs) : m_RegState.MapXmmTemp(true, m_OpCode.vs);
         if (!m_RegState.IsFlagZero(RspFlags::VCOL))
         {
-            m_Assembler->movdqa(asmjit::x86::xmm2, asmjit::x86::ptr(asmjit::x86::r14, FlagOffset(RspFlags::VCOL)));
+            vcol = m_RegState.MapXmmTemp(false, 0);
+            m_Assembler->movdqa(vcol, asmjit::x86::ptr(asmjit::x86::r14, FlagOffset(RspFlags::VCOL)));
         }
     }
     if (writeToAccum)
     {
-        m_Assembler->movdqa(asmjit::x86::xmm3, asmjit::x86::xmm0);
-        m_Assembler->paddw(asmjit::x86::xmm3, asmjit::x86::xmm1);
+        asmjit::x86::Xmm accum = m_RegState.MapXmmTemp(false, 0);
+        m_Assembler->movdqa(accum, vs);
+        m_Assembler->paddw(accum, vte);
         if (!m_RegState.IsFlagZero(RspFlags::VCOL))
         {
-            m_Assembler->paddw(asmjit::x86::xmm3, asmjit::x86::xmm2);
+            m_Assembler->paddw(accum, vcol);
         }
-        m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, AccumOffset(AccumLocation::Low)), asmjit::x86::xmm3);
+        m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, AccumOffset(AccumLocation::Low)), accum);
+        m_RegState.UnprotectXmm(accum);
     }
     if (writeToDest)
     {
-        m_Assembler->paddsw(asmjit::x86::xmm0, asmjit::x86::xmm1);
+        m_Assembler->paddsw(vs, vte);
         if (!m_RegState.IsFlagZero(RspFlags::VCOL))
         {
-            m_Assembler->paddsw(asmjit::x86::xmm0, asmjit::x86::xmm2);
+            m_Assembler->paddsw(vs, vcol);
         }
-        m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, VectorOffset(m_OpCode.vd)), asmjit::x86::xmm0);
+    }
+    if (vcol.isValid())
+    {
+        m_RegState.UnprotectXmm(vcol);
     }
 
     if (!m_RegState.IsFlagZero(RspFlags::VCOL) || !m_RegState.IsFlagZero(RspFlags::VCOH))
     {
-        m_Assembler->pxor(asmjit::x86::xmm0, asmjit::x86::xmm0);
+        asmjit::x86::Xmm zero = m_RegState.MapXmmZero();
         if (!m_RegState.IsFlagZero(RspFlags::VCOL))
         {
-            m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, FlagOffset(RspFlags::VCOL)), asmjit::x86::xmm0);
+            m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, FlagOffset(RspFlags::VCOL)), zero);
             m_RegState.SetFlagZero(RspFlags::VCOL);
         }
         if (!m_RegState.IsFlagZero(RspFlags::VCOH))
         {
-            m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, FlagOffset(RspFlags::VCOH)), asmjit::x86::xmm0);
+            m_Assembler->movdqa(asmjit::x86::ptr(asmjit::x86::r14, FlagOffset(RspFlags::VCOH)), zero);
             m_RegState.SetFlagZero(RspFlags::VCOH);
         }
     }
