@@ -88,6 +88,7 @@ void CRSPRecompilerOps::J(void)
         }
         else if (m_Recompiler.FindBranchJump(Target, Jump))
         {
+            m_RegState.WriteBackRegisters();
             m_Assembler->JmpLabel(stdstr_f("0x%X", Target).c_str(), Jump);
         }
     }
@@ -122,6 +123,7 @@ void CRSPRecompilerOps::JAL(void)
             const RspCodeBlock * FunctionBlock = m_CurrentBlock ? m_CurrentBlock->GetFunctionBlock(Target) : nullptr;
             if (FunctionBlock != nullptr)
             {
+                m_RegState.WriteBackRegisters();
                 if (SyncCPU)
                 {
                     m_Assembler->MoveConstToVariable(m_System.m_SP_PC_REG, "RSP PC", Target);
@@ -235,6 +237,7 @@ void CRSPRecompilerOps::BEQ(void)
                 {
                     g_Notify->BreakPoint(__FILE__, __LINE__);
                 }
+                m_RegState.WriteBackRegisters();
                 m_Assembler->JeLabel(stdstr_f("0x%X", Target).c_str(), Jump);
             }
         }
@@ -245,6 +248,7 @@ void CRSPRecompilerOps::BEQ(void)
             {
                 g_Notify->BreakPoint(__FILE__, __LINE__);
             }
+            m_RegState.WriteBackRegisters();
             m_Assembler->CompConstToVariable(&BranchCompare, "BranchCompare", true);
             m_Assembler->JeLabel(stdstr_f("0x%X", Target).c_str(), Jump);
         }
@@ -364,6 +368,7 @@ void CRSPRecompilerOps::BNE(void)
             {
                 g_Notify->BreakPoint(__FILE__, __LINE__);
             }
+            m_RegState.WriteBackRegisters();
             m_Assembler->CompConstToVariable(&BranchCompare, "BranchCompare", true);
             m_Assembler->JeLabel(stdstr_f("0x%X", Target).c_str(), Jump);
         }
@@ -427,6 +432,7 @@ void CRSPRecompilerOps::BLEZ(void)
         }
         if (!m_DelayAffectBranch)
         {
+            m_RegState.WriteBackRegisters();
             m_Assembler->CompConstToVariable(&m_GPR[m_OpCode.rs].W, GPR_Name(m_OpCode.rs), 0);
             asmjit::Label Jump;
             if (!m_Recompiler.FindBranchJump(Target, Jump))
@@ -502,6 +508,7 @@ void CRSPRecompilerOps::BGTZ(void)
         {
             g_Notify->BreakPoint(__FILE__, __LINE__);
         }
+        m_RegState.WriteBackRegisters();
         if (!m_DelayAffectBranch)
         {
             m_Assembler->CompConstToVariable(&m_GPR[m_OpCode.rs].W, GPR_Name(m_OpCode.rs), 0);
